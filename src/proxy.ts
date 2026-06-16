@@ -4,8 +4,8 @@ import type { NextRequest } from 'next/server'
 
 // Rutas que requieren sesión activa
 const PROTECTED = ['/admin', '/contenido', '/perfil']
-// Rutas de auth que no deben verse logueado
-const AUTH_ONLY = ['/login', '/registro']
+// Rutas de auth que no deben verse logueado (excepto /registro/enviado que sí puede verse)
+const AUTH_ONLY = ['/login', '/registro', '/olvide-contrasena']
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
