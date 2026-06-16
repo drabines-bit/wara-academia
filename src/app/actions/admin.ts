@@ -96,6 +96,22 @@ export async function changeUserRole(formData: FormData) {
   revalidatePath('/admin/usuarios')
 }
 
+export async function deleteUser(formData: FormData) {
+  const { userId } = await assertAdmin()
+  const id = formData.get('id') as string
+
+  if (id === userId) throw new Error('No podés eliminarte a vos mismo')
+
+  const service = createServiceClient()
+
+  await service.from('user_categories').delete().eq('user_id', id)
+  await service.from('profiles').delete().eq('id', id)
+  const { error } = await service.auth.admin.deleteUser(id)
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/admin/usuarios')
+}
+
 export async function updateUserCategories(formData: FormData) {
   await assertAdmin()
   const userId = formData.get('user_id') as string

@@ -1,7 +1,7 @@
 'use client'
 
-import { useTransition } from 'react'
-import { approveUser, rejectUser, changeUserRole } from '@/app/actions/admin'
+import { useTransition, useState } from 'react'
+import { approveUser, rejectUser, changeUserRole, deleteUser } from '@/app/actions/admin'
 import { Button } from '@/components/ui/button'
 import type { UserRole, UserStatus } from '@/types/database'
 
@@ -15,6 +15,7 @@ export function UserActions({
   role: UserRole
 }) {
   const [isPending, startTransition] = useTransition()
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const run = (action: (fd: FormData) => Promise<void>, extra?: Record<string, string>) =>
     startTransition(async () => {
@@ -76,6 +77,33 @@ export function UserActions({
       >
         {role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
       </Button>
+
+      {confirmDelete ? (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-[var(--text-secondary)]">¿Eliminar permanentemente?</span>
+          <Button
+            variant="danger"
+            loading={isPending}
+            onClick={() => run(deleteUser)}
+            className="text-xs py-1.5 px-3"
+          >
+            Sí, eliminar
+          </Button>
+          <button
+            onClick={() => setConfirmDelete(false)}
+            className="text-xs text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+          >
+            Cancelar
+          </button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setConfirmDelete(true)}
+          className="rounded-md px-3 py-1.5 text-xs text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-colors"
+        >
+          Eliminar
+        </button>
+      )}
     </div>
   )
 }
