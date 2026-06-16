@@ -111,3 +111,17 @@ body {
   background: var(--border);
   border-radius: 3px;
 }
+
+/* ─── Reduced motion ─────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse {
+    animation: none;
+    opacity: 0.6;
+  }
+  .animate-spin {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

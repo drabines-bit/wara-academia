@@ -15,7 +15,7 @@ const LEVEL_LABEL: Record<ComplexityLevel, string> = {
 }
 
 const TYPE_LABEL: Record<string, string> = {
-  video: 'VIDEO',
+  video: 'Video',
   pdf: 'PDF',
 }
 
@@ -158,7 +158,7 @@ export default async function ProductoPage({
               </span>
 
               <div className="min-w-0 flex-1">
-                <p className="font-medium text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                <p className="font-medium text-[var(--text-primary)] transition-colors">
                   {content.title}
                 </p>
                 {content.description && (

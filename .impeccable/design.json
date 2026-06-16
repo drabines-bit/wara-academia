@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-06-16T00:00:00Z",
+  "title": "Design System: Academia WARA GPS",
+  "extensions": {
+    "colorMeta": {
+      "tactical-dark": {
+        "role": "neutral",
+        "displayName": "Tactical Dark",
+        "canonical": "oklch(8% 0.01 260)",
+        "tonalRamp": ["#050607", "#0d0f14", "#161a22", "#1e2330", "#2a3040", "#3d4660", "#5a6380", "#8a90a0"]
+      },
+      "surface-panel": {
+        "role": "neutral",
+        "displayName": "Panel Surface",
+        "canonical": "oklch(12% 0.015 260)",
+        "tonalRamp": ["#070910", "#0d0f14", "#161a22", "#1e2330", "#2a3040", "#3d4a60", "#617080", "#9aa4b5"]
+      },
+      "surface-elevated": {
+        "role": "neutral",
+        "displayName": "Elevated Surface",
+        "canonical": "oklch(15% 0.02 260)",
+        "tonalRamp": ["#080a12", "#111520", "#1e2330", "#272f42", "#344055", "#4a5878", "#6e7ea0", "#a8b4cc"]
+      },
+      "signal-blue": {
+        "role": "primary",
+        "displayName": "Signal Blue",
+        "canonical": "oklch(62% 0.22 264)",
+        "tonalRamp": ["#040b1d", "#0a1c43", "#132f6b", "#1d468e", "#2a5aba", "#3b82f6", "#7aaeff", "#c5d9ff"]
+      },
+      "state-success": {
+        "role": "semantic",
+        "displayName": "Success",
+        "canonical": "oklch(73% 0.20 142)",
+        "tonalRamp": ["#013a12", "#024d18", "#066220", "#0a842d", "#14a83e", "#22c55e", "#5cde8c", "#a8f0c2"]
+      },
+      "state-warning": {
+        "role": "semantic",
+        "displayName": "Warning",
+        "canonical": "oklch(79% 0.18 71)",
+        "tonalRamp": ["#3d1e01", "#5a2e02", "#7a3f05", "#a35007", "#cc680a", "#f59e0b", "#ffc14a", "#ffe099"]
+      },
+      "state-danger": {
+        "role": "semantic",
+        "displayName": "Danger",
+        "canonical": "oklch(63% 0.22 29)",
+        "tonalRamp": ["#3d0404", "#5c0606", "#7a0a0a", "#9e1212", "#cc2828", "#ef4444", "#f87171", "#fca5a5"]
+      }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "Page headings and major section titles. One per view." },
+      "title": { "displayName": "Title", "purpose": "Card headings, sub-sections, feature names." },
+      "body": { "displayName": "Body", "purpose": "All prose content and descriptions. Max 65ch." },
+      "label": { "displayName": "Label", "purpose": "Nav items, chips, button text, form labels." },
+      "micro": { "displayName": "Micro", "purpose": "Mobile nav labels, role badges. Floor at 10px." }
+    },
+    "shadows": [
+      {
+        "name": "auth-card",
+        "value": "0 10px 40px rgba(0,0,0,0.4)",
+        "purpose": "Used only on the AuthCard (login/register). Grounds the card against the full-bleed auth background. The only shadow in the system."
+      }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "ease", "purpose": "Default easing for color/opacity transitions." },
+      { "name": "duration-fast", "value": "150ms", "purpose": "Button hover, nav item hover, badge color changes." },
+      { "name": "duration-standard", "value": "200ms", "purpose": "Theme transition (background-color, color on body)." }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px", "purpose": "Mobile bottom nav → desktop top nav switch. Primary responsive breakpoint." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button Primary",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action button. Used for submit, approve, confirm.",
+      "html": "<button class=\"ds-btn-primary\">Aprobar</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; font-family: system-ui, -apple-system, sans-serif; background-color: #3b82f6; color: #ffffff; border: none; cursor: pointer; transition: background-color 150ms ease; } .ds-btn-primary:hover { background-color: #2563eb; } .ds-btn-primary:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Button Ghost",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action, placed next to a primary. Low visual weight.",
+      "html": "<button class=\"ds-btn-ghost\">Cancelar</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; font-family: system-ui, -apple-system, sans-serif; background-color: transparent; color: #8a90a0; border: none; cursor: pointer; transition: color 150ms ease, background-color 150ms ease; } .ds-btn-ghost:hover { color: #e8eaf0; background-color: #1e2330; } .ds-btn-ghost:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; } .ds-btn-ghost:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Button Danger",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive action: reject, revoke, delete. Requires confirmation context.",
+      "html": "<button class=\"ds-btn-danger\">Rechazar</button>",
+      "css": ".ds-btn-danger { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; font-family: system-ui, -apple-system, sans-serif; background-color: #ef4444; color: #ffffff; border: none; cursor: pointer; transition: opacity 150ms ease; } .ds-btn-danger:hover { opacity: 0.9; } .ds-btn-danger:focus-visible { outline: 2px solid #ef4444; outline-offset: 2px; } .ds-btn-danger:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Input Field",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Standard text input with label above and optional error message below.",
+      "html": "<div class=\"ds-input-wrap\"><label class=\"ds-input-label\" for=\"ds-input-1\">Email</label><input class=\"ds-input\" id=\"ds-input-1\" type=\"email\" placeholder=\"usuario@ejemplo.com\" /><p class=\"ds-input-error\">El email es requerido.</p></div>",
+      "css": ".ds-input-wrap { display: flex; flex-direction: column; gap: 6px; } .ds-input-label { font-size: 14px; font-weight: 500; color: #8a90a0; font-family: system-ui, -apple-system, sans-serif; } .ds-input { width: 100%; border-radius: 8px; border: 1px solid #2a3040; padding: 10px 14px; font-size: 14px; font-family: system-ui, -apple-system, sans-serif; background-color: #1e2330; color: #e8eaf0; transition: border-color 150ms ease, outline 150ms ease; outline: none; } .ds-input::placeholder { color: #555e72; } .ds-input:focus { outline: 2px solid #3b82f6; outline-offset: 0; } .ds-input-error { font-size: 12px; color: #ef4444; font-family: system-ui, -apple-system, sans-serif; }"
+    },
+    {
+      "name": "Nav Item (Desktop)",
+      "kind": "nav",
+      "description": "Top navigation link. Two states: active (current section) and inactive.",
+      "html": "<nav class=\"ds-nav\"><a href=\"#\" class=\"ds-nav-link ds-nav-link--active\">Panel</a><a href=\"#\" class=\"ds-nav-link\">Usuarios</a><a href=\"#\" class=\"ds-nav-link\">Productos</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 4px; } .ds-nav-link { border-radius: 6px; padding: 6px 12px; font-size: 14px; font-family: system-ui, -apple-system, sans-serif; text-decoration: none; color: #8a90a0; transition: color 150ms ease, background-color 150ms ease; } .ds-nav-link:hover { color: #e8eaf0; background-color: #1e2330; } .ds-nav-link--active { background-color: #1e2330; color: #e8eaf0; font-weight: 500; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "description": "Pill-shaped status indicator for user approval state.",
+      "html": "<div class=\"ds-badges\"><span class=\"ds-badge ds-badge--pending\">Pendiente</span><span class=\"ds-badge ds-badge--approved\">Aprobado</span><span class=\"ds-badge ds-badge--rejected\">Rechazado</span></div>",
+      "css": ".ds-badges { display: flex; gap: 8px; align-items: center; } .ds-badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 2px 8px; font-size: 12px; font-weight: 500; font-family: system-ui, -apple-system, sans-serif; } .ds-badge--pending { background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; } .ds-badge--approved { background-color: rgba(34, 197, 94, 0.15); color: #22c55e; } .ds-badge--rejected { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; }"
+    },
+    {
+      "name": "Content Card",
+      "kind": "card",
+      "description": "List item card for admin user rows and student content items.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-body\"><p class=\"ds-card-title\">Nombre del contenido</p><p class=\"ds-card-meta\">Básico · Video · Drive ID: 1abc...</p></div></div>",
+      "css": ".ds-card { border-radius: 12px; border: 1px solid #2a3040; background-color: #161a22; padding: 16px; transition: border-color 150ms ease; } .ds-card:hover { border-color: #3b82f6; } .ds-card-body { display: flex; flex-direction: column; gap: 4px; } .ds-card-title { font-size: 14px; font-weight: 500; color: #e8eaf0; font-family: system-ui, -apple-system, sans-serif; margin: 0; } .ds-card-meta { font-size: 12px; color: #8a90a0; font-family: system-ui, -apple-system, sans-serif; margin: 0; }"
+    },
+    {
+      "name": "Auth Card",
+      "kind": "card",
+      "description": "Login and registration container. The only component with a shadow. External-facing.",
+      "html": "<div class=\"ds-auth-card\"><div class=\"ds-auth-header\"><div class=\"ds-logo\">W</div><span class=\"ds-auth-brand\">Academia WARA GPS</span></div><h1 class=\"ds-auth-title\">Iniciar sesión</h1><p class=\"ds-auth-subtitle\">Ingresá con tu cuenta registrada.</p></div>",
+      "css": ".ds-auth-card { border-radius: 16px; border: 1px solid #2a3040; background-color: #161a22; padding: 32px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); } .ds-auth-header { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; } .ds-logo { height: 32px; width: 32px; border-radius: 8px; background-color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #ffffff; font-family: system-ui, sans-serif; } .ds-auth-brand { font-size: 14px; font-weight: 600; color: #8a90a0; font-family: system-ui, sans-serif; } .ds-auth-title { font-size: 24px; font-weight: 700; color: #e8eaf0; font-family: system-ui, sans-serif; margin: 0 0 4px; } .ds-auth-subtitle { font-size: 14px; color: #8a90a0; font-family: system-ui, sans-serif; margin: 0; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "La Documentación de Campo",
+    "overview": "Academia WARA GPS is built like field documentation for professionals: every element earns its place by making information faster to reach or easier to read. The interface is not a product to admire — it is equipment to use. A GPS technician lands, finds the video they need, consumes it, and leaves. The system's role is to eliminate friction on that path.\n\nThe visual language borrows from the precision tools the user already trusts: developer tools, operations dashboards, technical documentation (Linear, Vercel). Deep near-black surfaces, a restrained Signal Blue for active states only, tonal layering over shadows, and a single system font at tight scale. Motion is minimal — state changes only, under 200ms.\n\nThis system explicitly rejects the LMS aesthetic: progress bars, gamification, saturated color blocks, icon-heavy card grids. The model is the manual you reach for in the field: structured, precise, fast.",
+    "keyCharacteristics": [
+      "Tonal depth over shadows: three surface levels communicate hierarchy without elevation",
+      "Signal Blue as operational indicator only — never decoration",
+      "One sans family: system-ui across all roles, weight and size do the work",
+      "Four theme variants sharing a single token vocabulary",
+      "Admin as tool, student as reader: density for the operator, clarity for the learner"
+    ],
+    "rules": [
+      { "name": "The Signal Rule", "body": "Signal Blue is used for one thing: 'this is active, selected, or the next action.' Never decoration, hover tints, or heading accents.", "section": "colors" },
+      { "name": "The Theme Contract", "body": "All four themes share identical CSS token names. New design decisions are made at the token level only. A component that hardcodes a hex value is a design bug.", "section": "colors" },
+      { "name": "The One Weight Rule", "body": "Hierarchy is expressed through size and weight contrast (400 body / 500 label / 700 heading). Never through letter-spacing, uppercase, or color alone.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Interactive elements are flat at rest. Shadows exist only on the AuthCard. Any new shadow addition requires explicit justification.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use Signal Blue only for active states, primary actions, and focus rings",
+      "Do express depth through background color steps (base → panel → elevated), not shadows",
+      "Do reference colors via var(--token-name) everywhere — never hardcode hex",
+      "Do keep motion under 200ms, limited to transition-colors or transition-opacity",
+      "Do include all interactive states: default, hover, focus-visible, disabled, loading",
+      "Do use skeleton loaders (animate-pulse) for async content, not inline spinners"
+    ],
+    "donts": [
+      "Don't use Signal Blue as decoration, hover tint, or heading accent",
+      "Don't add shadows to any component other than the AuthCard",
+      "Don't introduce a second font family — system-ui is the deliberate choice",
+      "Don't build LMS patterns: progress bars, badges, gamification, completion rings",
+      "Don't use gradient text (background-clip: text) — emphasis through weight and size only",
+      "Don't use border-left as a colored accent stripe greater than 1px",
+      "Don't hardcode hex values from one theme — all four themes must work",
+      "Don't add section eyebrows (small uppercase tracked kickers above every heading)",
+      "Don't replicate Udemy, Coursera, or heavy enterprise LMS aesthetics"
+    ]
+  }
+}

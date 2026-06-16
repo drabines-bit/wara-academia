@@ -50,7 +50,7 @@ export function AlumnoNav() {
           <button
             onClick={() => startTransition(() => signOut())}
             disabled={isPending}
-            className="text-sm text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors disabled:opacity-50"
+            className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors disabled:opacity-50"
           >
             {isPending ? '...' : 'Salir'}
           </button>
