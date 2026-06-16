@@ -2,20 +2,20 @@
 // Dejá el campo vacío ('') para ocultar ese ícono.
 
 export const footerConfig = {
-  copyright: 'WARA GPS',
+  copyright: 'WARA GPS | Blo, Bienestar, Logística y Organización S.A.',
 
   // Redes sociales — URL completa o '' para ocultar
-  instagram: '',
-  linkedin: '',
-  facebook: '',
+  instagram: 'https://www.instagram.com/waragps.arg/',
+  linkedin: 'https://www.linkedin.com/company/wara-gps/',
+  facebook: 'https://www.facebook.com/profile.php?id=61586640538592',
 
   // Contacto — valor real o '' para ocultar
-  email: '',                  // ej: 'contacto@waragps.com.ar'
+  email: 'comercial@waragps.com',                  // ej: 'contacto@waragps.com.ar'
   whatsapp: '',               // solo números en formato internacional, sin + (ej: '5491122334455')
 
   // Dirección con enlace a Google Maps
   maps: {
-    label: '',                // texto del tooltip (ej: 'Av. Corrientes 1234, Buenos Aires')
-    url: '',                  // URL de Google Maps (ej: 'https://maps.app.goo.gl/...')
+    label: 'Juan B. Justo 651, Ciudad de Mendoza',                // texto del tooltip (ej: 'Av. Corrientes 1234, Buenos Aires')
+    url: 'https://maps.app.goo.gl/xNTQeHvpH96QJGhs9',                  // URL de Google Maps (ej: 'https://maps.app.goo.gl/...')
   },
 }
