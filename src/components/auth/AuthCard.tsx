@@ -10,7 +10,7 @@ export function AuthCard({
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-8 shadow-lg">
       <div className="mb-6">
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-4 flex items-center justify-center gap-2">
           <img src="/logo.svg" alt="WARA GPS" className="h-8 w-auto" />
           <span className="text-sm font-semibold text-[var(--text-secondary)]">
             Academia WARA GPS
