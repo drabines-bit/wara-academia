@@ -17,6 +17,15 @@ const LEVEL_LABEL: Record<ComplexityLevel, string> = {
 const TYPE_LABEL: Record<string, string> = {
   video: 'Video',
   pdf: 'PDF',
+  audio: 'Audio',
+  otro: 'Descargable',
+}
+
+const TYPE_COLOR: Record<string, string> = {
+  video: 'bg-[var(--accent)]/15 text-[var(--accent)]',
+  pdf: 'bg-[var(--warning)]/15 text-[var(--warning)]',
+  audio: 'bg-[var(--success)]/15 text-[var(--success)]',
+  otro: 'bg-[var(--border)] text-[var(--text-secondary)]',
 }
 
 export async function generateMetadata({
@@ -226,12 +235,10 @@ export default async function ProductoPage({
                 <span
                   className={[
                     'mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wide',
-                    content.type === 'video'
-                      ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
-                      : 'bg-[var(--warning)]/15 text-[var(--warning)]',
+                    TYPE_COLOR[content.type] ?? TYPE_COLOR.otro,
                   ].join(' ')}
                 >
-                  {TYPE_LABEL[content.type]}
+                  {TYPE_LABEL[content.type] ?? content.type}
                 </span>
 
                 <div className="min-w-0 flex-1">

@@ -1,7 +1,7 @@
 export type UserRole = 'admin' | 'alumno'
 export type UserStatus = 'pending' | 'approved' | 'rejected'
 export type ComplexityLevel = 'basico' | 'intermedio' | 'avanzado'
-export type ContentType = 'video' | 'pdf'
+export type ContentType = 'video' | 'pdf' | 'audio' | 'otro'
 
 export interface Database {
   public: {

@@ -16,6 +16,15 @@ const LEVEL_LABEL: Record<string, string> = {
 const TYPE_LABEL: Record<string, string> = {
   video: 'Video',
   pdf: 'PDF',
+  audio: 'Audio',
+  otro: 'Descargable',
+}
+
+const TYPE_COLOR: Record<string, string> = {
+  video: 'bg-[var(--accent)]/15 text-[var(--accent)]',
+  pdf: 'bg-[var(--warning)]/15 text-[var(--warning)]',
+  audio: 'bg-[var(--success)]/15 text-[var(--success)]',
+  otro: 'bg-[var(--border)] text-[var(--text-secondary)]',
 }
 
 const NEXT_LEVEL: Record<string, ComplexityLevel | null> = {
@@ -106,12 +115,10 @@ export default async function ContenidoViewerPage({
           <span
             className={[
               'rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wide',
-              content.type === 'video'
-                ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
-                : 'bg-[var(--warning)]/15 text-[var(--warning)]',
+              TYPE_COLOR[content.type] ?? TYPE_COLOR.otro,
             ].join(' ')}
           >
-            {TYPE_LABEL[content.type]}
+            {TYPE_LABEL[content.type] ?? content.type}
           </span>
           <span className="rounded bg-[var(--bg-card)] px-1.5 py-0.5 text-[10px] text-[var(--text-muted)]">
             {LEVEL_LABEL[content.complexity]}

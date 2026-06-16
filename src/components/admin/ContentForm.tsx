@@ -15,6 +15,8 @@ const COMPLEXITY = [
 const TYPES = [
   { value: 'video', label: 'Video' },
   { value: 'pdf', label: 'PDF' },
+  { value: 'audio', label: 'Audio' },
+  { value: 'otro', label: 'Otro (descargable)' },
 ]
 
 const SELECT_CLASS =
