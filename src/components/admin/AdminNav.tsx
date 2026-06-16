@@ -8,6 +8,7 @@ import { useTransition } from 'react'
 const NAV = [
   { href: '/admin', label: 'Panel', icon: '⊞' },
   { href: '/admin/usuarios', label: 'Usuarios', icon: '👥' },
+  { href: '/admin/categorias', label: 'Categorías', icon: '🏷️' },
   { href: '/admin/productos', label: 'Productos', icon: '📦' },
   { href: '/admin/contenidos', label: 'Contenidos', icon: '🎬' },
 ]

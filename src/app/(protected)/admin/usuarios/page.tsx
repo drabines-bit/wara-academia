@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { UserActions } from '@/components/admin/UserActions'
+import { UserCategorySelect } from '@/components/admin/UserCategorySelect'
 import type { UserRole, UserStatus } from '@/types/database'
 
 export const metadata: Metadata = { title: 'Usuarios — Admin' }
@@ -34,7 +35,6 @@ export default async function UsuariosPage({
   const supabase = await createClient()
   const service = createServiceClient()
 
-  // Traer perfiles filtrados (usa el cliente de sesión del admin, respeta RLS)
   let query = supabase
     .from('profiles')
     .select('id, full_name, role, status, created_at')
@@ -46,11 +46,28 @@ export default async function UsuariosPage({
 
   const { data: profiles } = await query
 
-  // Traer emails desde auth.users (requiere service role)
-  const authResult = await service.auth.admin.listUsers({ perPage: 1000 })
+  const profileIds = (profiles ?? []).map((p) => p.id)
+
+  const [authResult, { data: allCategories }, { data: allUserCategories }] = await Promise.all([
+    service.auth.admin.listUsers({ perPage: 1000 }),
+    supabase.from('categories').select('*').order('sort_order').order('name'),
+    profileIds.length > 0
+      ? supabase.from('user_categories').select('user_id, category_id').in('user_id', profileIds)
+      : Promise.resolve({ data: [] }),
+  ])
+
   const emailById = Object.fromEntries(
     (authResult.data?.users ?? []).map((u) => [u.id, u.email ?? ''])
   )
+
+  const categoriesByUser: Record<string, string[]> = Object.fromEntries(
+    (profiles ?? []).map((p) => [p.id, []])
+  )
+  for (const uc of allUserCategories ?? []) {
+    if (categoriesByUser[uc.user_id]) {
+      categoriesByUser[uc.user_id].push(uc.category_id)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -89,7 +106,7 @@ export default async function UsuariosPage({
               className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-4"
             >
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex flex-col gap-0.5">
+                <div className="flex flex-col gap-0.5 min-w-0">
                   <p className="font-medium text-[var(--text-primary)]">
                     {p.full_name || '(sin nombre)'}
                   </p>
@@ -111,6 +128,11 @@ export default async function UsuariosPage({
                       {new Date(p.created_at).toLocaleDateString('es-AR')}
                     </span>
                   </div>
+                  <UserCategorySelect
+                    userId={p.id}
+                    allCategories={allCategories ?? []}
+                    assignedIds={categoriesByUser[p.id] ?? []}
+                  />
                 </div>
                 <UserActions id={p.id} status={p.status} role={p.role} />
               </div>

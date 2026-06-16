@@ -1,10 +1,18 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 import { ProductForm } from '@/components/admin/ProductForm'
 
 export const metadata: Metadata = { title: 'Nuevo producto — Admin' }
 
-export default function NuevoProductoPage() {
+export default async function NuevoProductoPage() {
+  const supabase = await createClient()
+  const { data: categories } = await supabase
+    .from('categories')
+    .select('*')
+    .order('sort_order')
+    .order('name')
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -18,7 +26,7 @@ export default function NuevoProductoPage() {
           Nuevo producto
         </h1>
       </div>
-      <ProductForm />
+      <ProductForm categories={categories ?? []} />
     </div>
   )
 }

@@ -28,9 +28,28 @@ export async function approveUser(formData: FormData) {
   const { supabase } = await assertAdmin()
   const id = formData.get('id') as string
 
-  // Usar el cliente del admin (con JWT) para que el trigger guard_profile_fields lo acepte
   const { error } = await supabase.from('profiles').update({ status: 'approved' as UserStatus }).eq('id', id)
   if (error) throw new Error(error.message)
+
+  // Asignar categorías por defecto si el usuario no tiene ninguna
+  const { data: existingCats } = await supabase
+    .from('user_categories')
+    .select('category_id')
+    .eq('user_id', id)
+
+  if (!existingCats?.length) {
+    const { data: defaultCats } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('is_default', true)
+
+    if (defaultCats?.length) {
+      const service = createServiceClient()
+      await service.from('user_categories').insert(
+        defaultCats.map((c) => ({ user_id: id, category_id: c.id }))
+      )
+    }
+  }
 
   // Service client solo para auth.admin API
   const service = createServiceClient()
@@ -77,6 +96,90 @@ export async function changeUserRole(formData: FormData) {
   revalidatePath('/admin/usuarios')
 }
 
+export async function updateUserCategories(formData: FormData) {
+  await assertAdmin()
+  const userId = formData.get('user_id') as string
+  const categoryIds = formData.getAll('category_ids') as string[]
+
+  const service = createServiceClient()
+
+  await service.from('user_categories').delete().eq('user_id', userId)
+
+  if (categoryIds.length > 0) {
+    const { error } = await service.from('user_categories').insert(
+      categoryIds.map((cid) => ({ user_id: userId, category_id: cid }))
+    )
+    if (error) throw new Error(error.message)
+  }
+
+  revalidatePath('/admin/usuarios')
+}
+
+// ── Categorías ────────────────────────────────────────────────────────────────
+
+export async function createCategory(
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const { supabase } = await assertAdmin()
+
+  const name = (formData.get('name') as string)?.trim()
+  const slugInput = (formData.get('slug') as string)?.trim()
+  const sort_order = Number(formData.get('sort_order') ?? 0)
+  const is_default = formData.get('is_default') === 'on'
+
+  if (!name) return { error: 'El nombre es requerido.' }
+  const slug = slugInput || slugify(name)
+
+  const { error } = await supabase
+    .from('categories')
+    .insert({ name, slug, sort_order, is_default })
+
+  if (error) {
+    if (error.message.includes('unique')) return { error: 'Ya existe una categoría con ese slug.' }
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin/categorias')
+  redirect('/admin/categorias')
+}
+
+export async function updateCategory(
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const { supabase } = await assertAdmin()
+
+  const id = formData.get('id') as string
+  const name = (formData.get('name') as string)?.trim()
+  const slug = (formData.get('slug') as string)?.trim()
+  const sort_order = Number(formData.get('sort_order') ?? 0)
+  const is_default = formData.get('is_default') === 'on'
+
+  if (!name) return { error: 'El nombre es requerido.' }
+  if (!slug) return { error: 'El slug es requerido.' }
+
+  const { error } = await supabase
+    .from('categories')
+    .update({ name, slug, sort_order, is_default })
+    .eq('id', id)
+
+  if (error) {
+    if (error.message.includes('unique')) return { error: 'Ya existe una categoría con ese slug.' }
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin/categorias')
+  redirect('/admin/categorias')
+}
+
+export async function deleteCategory(formData: FormData) {
+  const { supabase } = await assertAdmin()
+  const id = formData.get('id') as string
+  await supabase.from('categories').delete().eq('id', id)
+  revalidatePath('/admin/categorias')
+}
+
 // ── Productos ─────────────────────────────────────────────────────────────────
 
 export async function createProduct(
@@ -89,11 +192,15 @@ export async function createProduct(
   const slugInput = (formData.get('slug') as string)?.trim()
   const description = (formData.get('description') as string)?.trim() || null
   const sort_order = Number(formData.get('sort_order') ?? 0)
+  const category_id = (formData.get('category_id') as string) || null
 
   if (!name) return { error: 'El nombre es requerido.' }
   const slug = slugInput || slugify(name)
 
-  const { error } = await supabase.from('products').insert({ name, slug, description, sort_order })
+  const { error } = await supabase
+    .from('products')
+    .insert({ name, slug, description, sort_order, category_id })
+
   if (error) {
     if (error.message.includes('unique')) return { error: 'Ya existe un producto con ese slug.' }
     return { error: error.message }
@@ -114,11 +221,16 @@ export async function updateProduct(
   const slug = (formData.get('slug') as string)?.trim()
   const description = (formData.get('description') as string)?.trim() || null
   const sort_order = Number(formData.get('sort_order') ?? 0)
+  const category_id = (formData.get('category_id') as string) || null
 
   if (!name) return { error: 'El nombre es requerido.' }
   if (!slug) return { error: 'El slug es requerido.' }
 
-  const { error } = await supabase.from('products').update({ name, slug, description, sort_order }).eq('id', id)
+  const { error } = await supabase
+    .from('products')
+    .update({ name, slug, description, sort_order, category_id })
+    .eq('id', id)
+
   if (error) {
     if (error.message.includes('unique')) return { error: 'Ya existe un producto con ese slug.' }
     return { error: error.message }

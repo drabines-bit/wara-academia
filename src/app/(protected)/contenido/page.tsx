@@ -6,11 +6,41 @@ export const metadata: Metadata = { title: 'Inicio — Academia WARA GPS' }
 
 export default async function ContenidoPage() {
   const supabase = await createClient()
-  const { data: products } = await supabase
+
+  // Obtener el usuario actual para filtrar por sus categorías
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // Obtener las categorías asignadas al usuario
+  const { data: userCats } = await supabase
+    .from('user_categories')
+    .select('category_id')
+    .eq('user_id', user!.id)
+
+  let categoryIds = (userCats ?? []).map((r) => r.category_id)
+
+  // Si no tiene categorías asignadas, usar las categorías por defecto
+  if (categoryIds.length === 0) {
+    const { data: defaultCats } = await supabase
+      .from('categories')
+      .select('id')
+      .eq('is_default', true)
+    categoryIds = (defaultCats ?? []).map((c) => c.id)
+  }
+
+  // Filtrar productos: los de las categorías del usuario + los sin categoría (visibles para todos)
+  let productsQuery = supabase
     .from('products')
     .select('*')
     .order('sort_order')
     .order('name')
+
+  if (categoryIds.length > 0) {
+    productsQuery = productsQuery.or(
+      `category_id.in.(${categoryIds.join(',')}),category_id.is.null`
+    )
+  }
+
+  const { data: products } = await productsQuery
 
   if (!products?.length) {
     return (

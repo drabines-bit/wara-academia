@@ -8,11 +8,15 @@ export const metadata: Metadata = { title: 'Productos — Admin' }
 
 export default async function ProductosPage() {
   const supabase = await createClient()
-  const { data: products } = await supabase
-    .from('products')
-    .select('*')
-    .order('sort_order')
-    .order('name')
+
+  const [{ data: products }, { data: categories }] = await Promise.all([
+    supabase.from('products').select('*').order('sort_order').order('name'),
+    supabase.from('categories').select('id, name'),
+  ])
+
+  const categoryMap = Object.fromEntries(
+    (categories ?? []).map((c) => [c.id, c.name])
+  )
 
   return (
     <div className="flex flex-col gap-6">
@@ -49,6 +53,11 @@ export default async function ProductosPage() {
                 </p>
                 <p className="text-xs text-[var(--text-muted)]">
                   /{p.slug} · orden {p.sort_order}
+                  {p.category_id ? (
+                    <> · <span className="text-[var(--text-secondary)]">{categoryMap[p.category_id] ?? '—'}</span></>
+                  ) : (
+                    <> · <span className="italic">Sin categoría</span></>
+                  )}
                 </p>
               </div>
               <div className="flex shrink-0 gap-1">

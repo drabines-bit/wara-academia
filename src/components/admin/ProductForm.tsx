@@ -5,23 +5,26 @@ import { createProduct, updateProduct } from '@/app/actions/admin'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { slugify } from '@/lib/utils'
-import type { Product } from '@/types/database'
+import type { Category, Product } from '@/types/database'
 
-export function ProductForm({ product }: { product?: Product }) {
+export function ProductForm({
+  product,
+  categories,
+}: {
+  product?: Product
+  categories: Category[]
+}) {
   const action = product ? updateProduct : createProduct
   const [state, formAction, isPending] = useActionState(action, undefined)
   const slugRef = useRef<HTMLInputElement>(null)
   const nameRef = useRef<HTMLInputElement>(null)
 
-  // Auto-completar slug mientras escribe el nombre (solo en nuevo)
   useEffect(() => {
     if (product) return
     const input = nameRef.current
     const slugInput = slugRef.current
     if (!input || !slugInput) return
-    const handler = () => {
-      slugInput.value = slugify(input.value)
-    }
+    const handler = () => { slugInput.value = slugify(input.value) }
     input.addEventListener('input', handler)
     return () => input.removeEventListener('input', handler)
   }, [product])
@@ -62,6 +65,23 @@ export function ProductForm({ product }: { product?: Product }) {
           placeholder="Descripción breve del producto (opcional)"
           className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline focus:outline-2 focus:outline-[var(--accent)]"
         />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-medium text-[var(--text-secondary)]">
+          Categoría
+        </label>
+        <select
+          name="category_id"
+          defaultValue={product?.category_id ?? ''}
+          className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3.5 py-2.5 text-sm text-[var(--text-primary)] focus:outline focus:outline-2 focus:outline-[var(--accent)]"
+        >
+          <option value="">Sin categoría (visible para todos)</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
       </div>
       <Input
         label="Orden"

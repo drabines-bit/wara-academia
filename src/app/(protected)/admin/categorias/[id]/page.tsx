@@ -2,47 +2,40 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { ProductForm } from '@/components/admin/ProductForm'
-import type { Product } from '@/types/database'
+import { CategoryForm } from '@/components/admin/CategoryForm'
+import type { Category } from '@/types/database'
 
-export const metadata: Metadata = { title: 'Editar producto — Admin' }
+export const metadata: Metadata = { title: 'Editar categoría — Admin' }
 
-export default async function EditarProductoPage({
+export default async function EditarCategoriaPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
   const supabase = await createClient()
-
-  const { data: product } = await supabase
-    .from('products')
-    .select('*')
-    .eq('id', id)
-    .single() as { data: Product | null }
-
-  const { data: categories } = await supabase
+  const { data: category } = await supabase
     .from('categories')
     .select('*')
-    .order('sort_order')
-    .order('name')
+    .eq('id', id)
+    .single() as { data: Category | null }
 
-  if (!product) notFound()
+  if (!category) notFound()
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <Link
-          href="/admin/productos"
+          href="/admin/categorias"
           className="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
         >
-          ← Productos
+          ← Categorías
         </Link>
         <h1 className="mt-2 text-xl font-bold text-[var(--text-primary)]">
-          Editar: {product.name}
+          Editar: {category.name}
         </h1>
       </div>
-      <ProductForm product={product} categories={categories ?? []} />
+      <CategoryForm category={category} />
     </div>
   )
 }
