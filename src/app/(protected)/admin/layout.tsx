@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { AdminNav } from '@/components/admin/AdminNav'
 import type { UserRole } from '@/types/database'
 
-// Verifica rol admin además de la comprobación del layout padre.
 export default async function AdminLayout({
   children,
 }: {
@@ -23,5 +23,12 @@ export default async function AdminLayout({
 
   if (!profile || profile.role !== 'admin') redirect('/')
 
-  return <>{children}</>
+  return (
+    <div className="min-h-screen flex flex-col">
+      <AdminNav />
+      <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-6 pb-24 md:pb-6">
+        {children}
+      </main>
+    </div>
+  )
 }
