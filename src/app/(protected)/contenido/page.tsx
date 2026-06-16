@@ -9,6 +9,14 @@ export default async function ContenidoPage() {
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name')
+    .eq('id', user!.id)
+    .single()
+
+  const firstName = profile?.full_name?.trim().split(/\s+/)[0] ?? ''
+
   // Categorías del usuario (o por defecto)
   const { data: userCats } = await supabase
     .from('user_categories')
@@ -93,9 +101,13 @@ export default async function ContenidoPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">Tus capacitaciones</h1>
+        <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+          {firstName ? `Hola, ${firstName}` : 'Tus capacitaciones'}
+        </h1>
         <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          Seleccioná un producto para ver el material disponible.
+          {firstName
+            ? '¿Sobre qué querés aprender hoy?'
+            : 'Seleccioná un producto para ver el material disponible.'}
         </p>
       </div>
 

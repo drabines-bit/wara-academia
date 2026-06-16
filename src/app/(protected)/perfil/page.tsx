@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { ThemeSelector } from '@/components/alumno/ThemeSelector'
 import { SpotifyForm } from '@/components/alumno/SpotifyForm'
+import { NameForm } from '@/components/alumno/NameForm'
 
 export const metadata: Metadata = { title: 'Mi perfil — Academia WARA GPS' }
 
@@ -30,17 +31,14 @@ export default async function PerfilPage() {
 
       {/* Cuenta */}
       <section className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-5">
-        <h2 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">Cuenta</h2>
-        <dl className="flex flex-col gap-2">
+        <h2 className="mb-4 text-sm font-semibold text-[var(--text-primary)]">Cuenta</h2>
+        <div className="flex flex-col gap-4">
+          <NameForm currentName={profile.full_name} />
           <div>
-            <dt className="text-xs text-[var(--text-muted)]">Nombre</dt>
-            <dd className="text-sm text-[var(--text-primary)]">{profile.full_name}</dd>
+            <p className="text-xs text-[var(--text-muted)]">Email</p>
+            <p className="mt-0.5 text-sm text-[var(--text-secondary)]">{user!.email}</p>
           </div>
-          <div>
-            <dt className="text-xs text-[var(--text-muted)]">Email</dt>
-            <dd className="text-sm text-[var(--text-secondary)]">{user!.email}</dd>
-          </div>
-        </dl>
+        </div>
       </section>
 
       {/* Tema visual */}

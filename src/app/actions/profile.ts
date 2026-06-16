@@ -16,6 +16,31 @@ export async function updateTheme(theme: number): Promise<void> {
   await supabase.from('profiles').update({ preferred_theme: theme }).eq('id', user.id)
 }
 
+export async function updateFullName(
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado.' }
+
+  const full_name = (formData.get('full_name') as string)?.trim()
+  if (!full_name) return { error: 'El nombre no puede estar vacío.' }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ full_name })
+    .eq('id', user.id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/perfil')
+  revalidatePath('/contenido')
+  return { success: true }
+}
+
 export async function updateProfile(
   _prevState: ActionState,
   formData: FormData
