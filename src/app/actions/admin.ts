@@ -25,16 +25,17 @@ async function assertAdmin() {
 // ── Usuarios ──────────────────────────────────────────────────────────────────
 
 export async function approveUser(formData: FormData) {
-  await assertAdmin()
+  const { supabase } = await assertAdmin()
   const id = formData.get('id') as string
 
-  const service = createServiceClient()
-
-  const { error } = await service.from('profiles').update({ status: 'approved' as UserStatus }).eq('id', id)
+  // Usar el cliente del admin (con JWT) para que el trigger guard_profile_fields lo acepte
+  const { error } = await supabase.from('profiles').update({ status: 'approved' as UserStatus }).eq('id', id)
   if (error) throw new Error(error.message)
 
+  // Service client solo para auth.admin API
+  const service = createServiceClient()
   const { data } = await service.auth.admin.getUserById(id)
-  const { data: profile } = await service
+  const { data: profile } = await supabase
     .from('profiles').select('full_name').eq('id', id).single()
 
   if (data.user?.email && profile?.full_name) {
@@ -45,16 +46,15 @@ export async function approveUser(formData: FormData) {
 }
 
 export async function rejectUser(formData: FormData) {
-  await assertAdmin()
+  const { supabase } = await assertAdmin()
   const id = formData.get('id') as string
 
-  const service = createServiceClient()
-
-  const { error } = await service.from('profiles').update({ status: 'rejected' as UserStatus }).eq('id', id)
+  const { error } = await supabase.from('profiles').update({ status: 'rejected' as UserStatus }).eq('id', id)
   if (error) throw new Error(error.message)
 
+  const service = createServiceClient()
   const { data } = await service.auth.admin.getUserById(id)
-  const { data: profile } = await service
+  const { data: profile } = await supabase
     .from('profiles').select('full_name').eq('id', id).single()
 
   if (data.user?.email && profile?.full_name) {
@@ -65,14 +65,13 @@ export async function rejectUser(formData: FormData) {
 }
 
 export async function changeUserRole(formData: FormData) {
-  await assertAdmin()
+  const { supabase } = await assertAdmin()
   const id = formData.get('id') as string
   const role = formData.get('role') as UserRole
 
   if (role !== 'admin' && role !== 'alumno') throw new Error('Rol inválido')
 
-  const service = createServiceClient()
-  const { error } = await service.from('profiles').update({ role }).eq('id', id)
+  const { error } = await supabase.from('profiles').update({ role }).eq('id', id)
   if (error) throw new Error(error.message)
 
   revalidatePath('/admin/usuarios')
