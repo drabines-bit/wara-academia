@@ -130,8 +130,8 @@ create policy "contents_admin"  on public.contents for all    using (public.is_a
 ## 3. Supabase — configuración de Auth
 
 En **Authentication → URL Configuration**:
-- Site URL: `https://academia-wara.vercel.app`
-- Redirect URLs: `https://academia-wara.vercel.app/auth/callback`
+- Site URL: `https://wara-academia.vercel.app`
+- Redirect URLs: `https://wara-academia.vercel.app/auth/callback`
 
 Para desarrollo local agregar también:
 - `http://localhost:3000/auth/callback`

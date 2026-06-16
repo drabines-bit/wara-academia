@@ -6,7 +6,7 @@
 - Next.js 16 (App Router, TypeScript) + Tailwind CSS
 - Supabase (Postgres + Auth + RLS)
 - Resend (emails transaccionales)
-- Hosting: Vercel (`academia-wara.vercel.app`)
+- Hosting: Vercel (`wara-academia.vercel.app`)
 
 ## Convenciones críticas
 
