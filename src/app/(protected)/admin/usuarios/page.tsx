@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { UserActions } from '@/components/admin/UserActions'
 import type { UserRole, UserStatus } from '@/types/database'
@@ -30,10 +31,11 @@ export default async function UsuariosPage({
   searchParams: Promise<{ estado?: string }>
 }) {
   const { estado } = await searchParams
+  const supabase = await createClient()
   const service = createServiceClient()
 
-  // Traer perfiles filtrados
-  let query = service
+  // Traer perfiles filtrados (usa el cliente de sesión del admin, respeta RLS)
+  let query = supabase
     .from('profiles')
     .select('id, full_name, role, status, created_at')
     .order('created_at', { ascending: false })
@@ -44,9 +46,11 @@ export default async function UsuariosPage({
 
   const { data: profiles } = await query
 
-  // Traer emails desde auth.users
-  const { data: { users: authUsers } } = await service.auth.admin.listUsers({ perPage: 1000 })
-  const emailById = Object.fromEntries(authUsers.map((u) => [u.id, u.email ?? '']))
+  // Traer emails desde auth.users (requiere service role)
+  const authResult = await service.auth.admin.listUsers({ perPage: 1000 })
+  const emailById = Object.fromEntries(
+    (authResult.data?.users ?? []).map((u) => [u.id, u.email ?? ''])
+  )
 
   return (
     <div className="flex flex-col gap-6">
