@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { AdminNav } from '@/components/admin/AdminNav'
-import type { UserRole } from '@/types/database'
 
 export default async function AdminLayout({
   children,
@@ -19,7 +18,7 @@ export default async function AdminLayout({
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single() as { data: { role: UserRole } | null; error: unknown }
+    .single()
 
   if (!profile || profile.role !== 'admin') redirect('/')
 

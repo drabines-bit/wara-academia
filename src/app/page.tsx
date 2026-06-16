@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import type { UserRole, UserStatus } from '@/types/database'
 
 // Raíz: redirigir según estado de sesión y perfil
 export default async function Home() {
@@ -15,7 +14,7 @@ export default async function Home() {
     .from('profiles')
     .select('role, status')
     .eq('id', user.id)
-    .single() as { data: { role: UserRole; status: UserStatus } | null; error: unknown }
+    .single()
 
   if (!profile || profile.status === 'pending') redirect('/pendiente')
   if (profile.status === 'rejected') redirect('/login?rechazado=true')

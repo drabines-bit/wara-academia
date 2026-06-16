@@ -15,12 +15,12 @@ export default async function EditarContenidoPage({
   const { id } = await params
   const supabase = await createClient()
 
-  const [{ data: content }, { data: products }] = await Promise.all([
-    supabase.from('contents').select('*').eq('id', id).single() as
-      unknown as Promise<{ data: Content | null }>,
-    supabase.from('products').select('*').order('sort_order').order('name') as
-      unknown as Promise<{ data: Product[] | null }>,
+  const [contentResult, productsResult] = await Promise.all([
+    supabase.from('contents').select('*').eq('id', id).single(),
+    supabase.from('products').select('*').order('sort_order').order('name'),
   ])
+  const content = contentResult.data
+  const products = productsResult.data
 
   if (!content) notFound()
 

@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { DriveViewer } from '@/components/alumno/DriveViewer'
-import type { Content, Product } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,7 +28,7 @@ export async function generateMetadata({
     .from('contents')
     .select('title')
     .eq('id', id)
-    .single() as { data: Pick<Content, 'title'> | null; error: unknown }
+    .single()
   return {
     title: content ? `${content.title} — Academia WARA GPS` : 'Contenido — Academia WARA GPS',
   }
@@ -44,10 +43,8 @@ export default async function ContenidoViewerPage({
   const supabase = await createClient()
 
   const [productResult, contentResult] = await Promise.all([
-    supabase.from('products').select('*').eq('slug', slug).single() as
-      unknown as Promise<{ data: Product | null; error: unknown }>,
-    supabase.from('contents').select('*').eq('id', id).single() as
-      unknown as Promise<{ data: Content | null; error: unknown }>,
+    supabase.from('products').select('*').eq('slug', slug).single(),
+    supabase.from('contents').select('*').eq('id', id).single(),
   ])
 
   const product = productResult.data
@@ -80,7 +77,7 @@ export default async function ContenidoViewerPage({
         type={content.type}
       />
 
-      {/* Metadatos del contenido */}
+      {/* Metadatos */}
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span
@@ -113,17 +110,7 @@ export default async function ContenidoViewerPage({
           href={`/contenido/${slug}?nivel=${content.complexity}`}
           className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
           Volver a {product.name}

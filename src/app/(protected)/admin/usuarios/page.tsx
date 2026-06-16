@@ -42,9 +42,7 @@ export default async function UsuariosPage({
     query = query.eq('status', estado)
   }
 
-  const { data: profiles } = await query as {
-    data: { id: string; full_name: string; role: UserRole; status: UserStatus; created_at: string }[] | null
-  }
+  const { data: profiles } = await query
 
   // Traer emails desde auth.users
   const { data: { users: authUsers } } = await service.auth.admin.listUsers({ perPage: 1000 })

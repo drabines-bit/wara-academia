@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ThemeSync } from '@/components/alumno/ThemeSync'
 import { SpotifyWidget } from '@/components/alumno/SpotifyWidget'
-import type { UserStatus } from '@/types/database'
 
 export default async function ProtectedLayout({
   children,
@@ -20,14 +19,7 @@ export default async function ProtectedLayout({
     .from('profiles')
     .select('status, preferred_theme, spotify_embed_url')
     .eq('id', user.id)
-    .single() as {
-    data: {
-      status: UserStatus
-      preferred_theme: number
-      spotify_embed_url: string | null
-    } | null
-    error: unknown
-  }
+    .single()
 
   if (!profile || profile.status === 'pending') redirect('/pendiente')
   if (profile.status === 'rejected') redirect('/login?rechazado=true')

@@ -17,8 +17,7 @@ async function assertAdmin() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('No autenticado')
   const { data: profile } = await supabase
-    .from('profiles').select('role').eq('id', user.id).single() as
-    { data: { role: UserRole } | null; error: unknown }
+    .from('profiles').select('role').eq('id', user.id).single()
   if (profile?.role !== 'admin') throw new Error('No autorizado')
   return { supabase, userId: user.id }
 }
@@ -31,16 +30,12 @@ export async function approveUser(formData: FormData) {
 
   const service = createServiceClient()
 
-  // Actualizar status
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (service.from('profiles') as any).update({ status: 'approved' }).eq('id', id)
+  const { error } = await service.from('profiles').update({ status: 'approved' as UserStatus }).eq('id', id)
   if (error) throw new Error(error.message)
 
-  // Obtener datos del usuario para el email
   const { data } = await service.auth.admin.getUserById(id)
   const { data: profile } = await service
-    .from('profiles').select('full_name').eq('id', id).single() as
-    { data: { full_name: string } | null; error: unknown }
+    .from('profiles').select('full_name').eq('id', id).single()
 
   if (data.user?.email && profile?.full_name) {
     sendApprovalEmail(data.user.email, profile.full_name).catch(console.error)
@@ -55,14 +50,12 @@ export async function rejectUser(formData: FormData) {
 
   const service = createServiceClient()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (service.from('profiles') as any).update({ status: 'rejected' }).eq('id', id)
+  const { error } = await service.from('profiles').update({ status: 'rejected' as UserStatus }).eq('id', id)
   if (error) throw new Error(error.message)
 
   const { data } = await service.auth.admin.getUserById(id)
   const { data: profile } = await service
-    .from('profiles').select('full_name').eq('id', id).single() as
-    { data: { full_name: string } | null; error: unknown }
+    .from('profiles').select('full_name').eq('id', id).single()
 
   if (data.user?.email && profile?.full_name) {
     sendRejectionEmail(data.user.email, profile.full_name).catch(console.error)
@@ -79,8 +72,7 @@ export async function changeUserRole(formData: FormData) {
   if (role !== 'admin' && role !== 'alumno') throw new Error('Rol inválido')
 
   const service = createServiceClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (service.from('profiles') as any).update({ role }).eq('id', id)
+  const { error } = await service.from('profiles').update({ role }).eq('id', id)
   if (error) throw new Error(error.message)
 
   revalidatePath('/admin/usuarios')
@@ -102,8 +94,7 @@ export async function createProduct(
   if (!name) return { error: 'El nombre es requerido.' }
   const slug = slugInput || slugify(name)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('products') as any).insert({ name, slug, description, sort_order })
+  const { error } = await supabase.from('products').insert({ name, slug, description, sort_order })
   if (error) {
     if (error.message.includes('unique')) return { error: 'Ya existe un producto con ese slug.' }
     return { error: error.message }
@@ -128,8 +119,7 @@ export async function updateProduct(
   if (!name) return { error: 'El nombre es requerido.' }
   if (!slug) return { error: 'El slug es requerido.' }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('products') as any).update({ name, slug, description, sort_order }).eq('id', id)
+  const { error } = await supabase.from('products').update({ name, slug, description, sort_order }).eq('id', id)
   if (error) {
     if (error.message.includes('unique')) return { error: 'Ya existe un producto con ese slug.' }
     return { error: error.message }
@@ -166,8 +156,7 @@ export async function createContent(
   if (!title) return { error: 'El título es requerido.' }
   if (!drive_file_id) return { error: 'El ID de Google Drive es requerido.' }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('contents') as any).insert({
+  const { error } = await supabase.from('contents').insert({
     product_id, title, description, complexity, type, drive_file_id, sort_order,
     created_by: userId,
   })
@@ -195,8 +184,8 @@ export async function updateContent(
   if (!title) return { error: 'El título es requerido.' }
   if (!drive_file_id) return { error: 'El ID de Google Drive es requerido.' }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('contents') as any)
+  const { error } = await supabase
+    .from('contents')
     .update({ product_id, title, description, complexity, type, drive_file_id, sort_order })
     .eq('id', id)
   if (error) return { error: error.message }

@@ -7,36 +7,28 @@ export const metadata: Metadata = { title: 'Panel de administración' }
 export default async function AdminPage() {
   const supabase = await createClient()
 
-  const [{ count: pending }, { count: products }, { count: contents }] =
-    await Promise.all([
-      supabase
-        .from('profiles')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'pending') as unknown as Promise<{ count: number | null }>,
-      supabase
-        .from('products')
-        .select('id', { count: 'exact', head: true }) as unknown as Promise<{ count: number | null }>,
-      supabase
-        .from('contents')
-        .select('id', { count: 'exact', head: true }) as unknown as Promise<{ count: number | null }>,
-    ])
+  const [pendingResult, productsResult, contentsResult] = await Promise.all([
+    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    supabase.from('products').select('id', { count: 'exact', head: true }),
+    supabase.from('contents').select('id', { count: 'exact', head: true }),
+  ])
 
   const cards = [
     {
       label: 'Usuarios pendientes',
-      value: pending ?? 0,
+      value: pendingResult.count ?? 0,
       href: '/admin/usuarios?estado=pending',
-      urgent: (pending ?? 0) > 0,
+      urgent: (pendingResult.count ?? 0) > 0,
     },
     {
       label: 'Productos',
-      value: products ?? 0,
+      value: productsResult.count ?? 0,
       href: '/admin/productos',
       urgent: false,
     },
     {
       label: 'Contenidos',
-      value: contents ?? 0,
+      value: contentsResult.count ?? 0,
       href: '/admin/contenidos',
       urgent: false,
     },
@@ -65,9 +57,7 @@ export default async function AdminPage() {
                 : 'border-[var(--border)] bg-[var(--bg-surface)]',
             ].join(' ')}
           >
-            <p className="text-3xl font-bold text-[var(--text-primary)]">
-              {value}
-            </p>
+            <p className="text-3xl font-bold text-[var(--text-primary)]">{value}</p>
             <p
               className={[
                 'mt-1 text-sm',

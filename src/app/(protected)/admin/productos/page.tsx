@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { deleteProduct } from '@/app/actions/admin'
 import { DeleteButton } from '@/components/admin/DeleteButton'
-import type { Product } from '@/types/database'
 
 export const metadata: Metadata = { title: 'Productos — Admin' }
 
@@ -13,7 +12,7 @@ export default async function ProductosPage() {
     .from('products')
     .select('*')
     .order('sort_order')
-    .order('name') as { data: Product[] | null }
+    .order('name')
 
   return (
     <div className="flex flex-col gap-6">

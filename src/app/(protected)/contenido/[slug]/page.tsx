@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import type { ComplexityLevel, Content, Product } from '@/types/database'
+import type { ComplexityLevel, Content } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +30,7 @@ export async function generateMetadata({
     .from('products')
     .select('name')
     .eq('slug', slug)
-    .single() as { data: Pick<Product, 'name'> | null; error: unknown }
+    .single()
   return {
     title: product ? `${product.name} — Academia WARA GPS` : 'Producto — Academia WARA GPS',
   }
@@ -56,7 +56,7 @@ export default async function ProductoPage({
     .from('products')
     .select('*')
     .eq('slug', slug)
-    .single() as { data: Product | null; error: unknown }
+    .single()
 
   if (!product) notFound()
 
@@ -65,7 +65,7 @@ export default async function ProductoPage({
     .select('*')
     .eq('product_id', product.id)
     .order('sort_order')
-    .order('title') as { data: Content[] | null; error: unknown }
+    .order('title')
 
   const grouped: Record<ComplexityLevel, Content[]> = {
     basico: [],
@@ -146,7 +146,6 @@ export default async function ProductoPage({
               href={`/contenido/${slug}/${content.id}`}
               className="group flex items-start gap-4 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-4 transition-colors hover:border-[var(--accent)] hover:bg-[var(--bg-card)]"
             >
-              {/* Badge tipo */}
               <span
                 className={[
                   'mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wide',

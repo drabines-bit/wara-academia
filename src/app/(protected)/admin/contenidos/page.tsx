@@ -23,23 +23,15 @@ export default async function ContenidosPage({
   const { producto } = await searchParams
   const supabase = await createClient()
 
-  const [{ data: products }, contentsResult] = await Promise.all([
-    supabase.from('products').select('id, name').order('sort_order').order('name') as
-      unknown as Promise<{ data: Pick<Product, 'id' | 'name'>[] | null }>,
-    (producto
-      ? supabase
-          .from('contents')
-          .select('*, products(name)')
-          .eq('product_id', producto)
-          .order('sort_order')
-      : supabase
-          .from('contents')
-          .select('*, products(name)')
-          .order('sort_order')
-    ) as unknown as Promise<{ data: ContentWithProduct[] | null }>,
+  const [productsResult, contentsResult] = await Promise.all([
+    supabase.from('products').select('id, name').order('sort_order').order('name'),
+    producto
+      ? supabase.from('contents').select('*, products(name)').eq('product_id', producto).order('sort_order')
+      : supabase.from('contents').select('*, products(name)').order('sort_order'),
   ])
 
-  const contents = contentsResult.data
+  const products = productsResult.data
+  const contents = contentsResult.data as ContentWithProduct[] | null
 
   return (
     <div className="flex flex-col gap-6">

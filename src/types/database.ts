@@ -34,6 +34,7 @@ export interface Database {
           spotify_embed_url?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       products: {
         Row: {
@@ -60,6 +61,7 @@ export interface Database {
           sort_order?: number
           created_at?: string
         }
+        Relationships: []
       }
       contents: {
         Row: {
@@ -98,6 +100,15 @@ export interface Database {
           created_by?: string | null
           created_at?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: 'contents_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
     Views: Record<string, never>
@@ -117,6 +128,7 @@ export interface Database {
       complexity_level: ComplexityLevel
       content_type: ContentType
     }
+    CompositeTypes: Record<string, never>
   }
 }
 

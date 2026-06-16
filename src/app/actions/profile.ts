@@ -13,10 +13,7 @@ export async function updateTheme(theme: number): Promise<void> {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase.from('profiles') as any)
-    .update({ preferred_theme: theme })
-    .eq('id', user.id)
+  await supabase.from('profiles').update({ preferred_theme: theme }).eq('id', user.id)
 }
 
 export async function updateProfile(
@@ -43,8 +40,8 @@ export async function updateProfile(
     spotify_embed_url = embedUrl
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (supabase.from('profiles') as any)
+  const { error } = await supabase
+    .from('profiles')
     .update({ spotify_embed_url })
     .eq('id', user.id)
 

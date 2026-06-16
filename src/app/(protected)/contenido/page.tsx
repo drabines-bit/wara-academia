@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import type { Product } from '@/types/database'
 
 export const metadata: Metadata = { title: 'Inicio — Academia WARA GPS' }
 
@@ -11,7 +10,7 @@ export default async function ContenidoPage() {
     .from('products')
     .select('*')
     .order('sort_order')
-    .order('name') as { data: Product[] | null; error: unknown }
+    .order('name')
 
   if (!products?.length) {
     return (
@@ -55,17 +54,7 @@ export default async function ContenidoPage() {
             )}
             <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-[var(--accent)]">
               Ver contenido
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </span>

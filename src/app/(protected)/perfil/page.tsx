@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { ThemeSelector } from '@/components/alumno/ThemeSelector'
 import { SpotifyForm } from '@/components/alumno/SpotifyForm'
-import type { Profile } from '@/types/database'
 
 export const metadata: Metadata = { title: 'Mi perfil — Academia WARA GPS' }
 
@@ -16,7 +15,7 @@ export default async function PerfilPage() {
     .from('profiles')
     .select('*')
     .eq('id', user!.id)
-    .single() as { data: Profile | null; error: unknown }
+    .single()
 
   if (!profile) return null
 
