@@ -1,26 +1,113 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─── Tema 1: Oscuro profundo (default) ─────────────────────────────────────── */
+:root,
+[data-theme="1"] {
+  --bg-base: #0d0f14;
+  --bg-surface: #161a22;
+  --bg-card: #1e2330;
+  --border: #2a3040;
+  --text-primary: #e8eaf0;
+  --text-secondary: #8a90a0;
+  --text-muted: #555e72;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-fg: #ffffff;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
 }
 
+/* ─── Tema 2: Azul noche ─────────────────────────────────────────────────────── */
+[data-theme="2"] {
+  --bg-base: #07111f;
+  --bg-surface: #0d1e35;
+  --bg-card: #132a4a;
+  --border: #1d3a5f;
+  --text-primary: #dce8f5;
+  --text-secondary: #7a9abb;
+  --text-muted: #4a6580;
+  --accent: #38bdf8;
+  --accent-hover: #0ea5e9;
+  --accent-fg: #0a1929;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --danger: #f87171;
+}
+
+/* ─── Tema 3: Verde bosque oscuro ────────────────────────────────────────────── */
+[data-theme="3"] {
+  --bg-base: #080f0a;
+  --bg-surface: #0f1a11;
+  --bg-card: #162419;
+  --border: #243b27;
+  --text-primary: #d4ede0;
+  --text-secondary: #7aaa88;
+  --text-muted: #4a6e54;
+  --accent: #4ade80;
+  --accent-hover: #22c55e;
+  --accent-fg: #052010;
+  --success: #86efac;
+  --warning: #fde68a;
+  --danger: #fca5a5;
+}
+
+/* ─── Tema 4: Gris neutro claro ─────────────────────────────────────────────── */
+[data-theme="4"] {
+  --bg-base: #f1f3f7;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --border: #d1d8e4;
+  --text-primary: #1a2030;
+  --text-secondary: #4a5568;
+  --text-muted: #90a0b8;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-fg: #ffffff;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
+}
+
+/* ─── Tokens de Tailwind ─────────────────────────────────────────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-card: var(--bg-card);
+  --color-border: var(--border);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Base ───────────────────────────────────────────────────────────────────── */
+html {
+  height: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100%;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ─── Scrollbar (temas oscuros) ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
 }
