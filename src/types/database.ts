@@ -148,6 +148,39 @@ export interface Database {
           },
         ]
       }
+      user_content_progress: {
+        Row: {
+          user_id: string
+          content_id: string
+          viewed_at: string
+        }
+        Insert: {
+          user_id: string
+          content_id: string
+          viewed_at?: string
+        }
+        Update: {
+          user_id?: string
+          content_id?: string
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'user_content_progress_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'user_content_progress_content_id_fkey'
+            columns: ['content_id']
+            isOneToOne: false
+            referencedRelation: 'contents'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       user_categories: {
         Row: {
           user_id: string
@@ -202,6 +235,7 @@ export interface Database {
 
 // Tipos derivados de uso frecuente
 export type Profile = Database['public']['Tables']['profiles']['Row']
+export type UserContentProgress = Database['public']['Tables']['user_content_progress']['Row']
 export type Category = Database['public']['Tables']['categories']['Row']
 export type Product = Database['public']['Tables']['products']['Row']
 export type Content = Database['public']['Tables']['contents']['Row']

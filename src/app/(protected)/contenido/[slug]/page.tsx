@@ -52,11 +52,13 @@ export default async function ProductoPage({
 
   const supabase = await createClient()
 
-  const { data: product } = await supabase
-    .from('products')
-    .select('*')
-    .eq('slug', slug)
-    .single()
+  const [productResult, authResult] = await Promise.all([
+    supabase.from('products').select('*').eq('slug', slug).single(),
+    supabase.auth.getUser(),
+  ])
+
+  const product = productResult.data
+  const user = authResult.data.user
 
   if (!product) notFound()
 
@@ -66,6 +68,22 @@ export default async function ProductoPage({
     .eq('product_id', product.id)
     .order('sort_order')
     .order('title')
+
+  const allContentIds = (contents ?? []).map((c) => c.id)
+
+  // Progreso del usuario para este producto
+  const { data: viewedRows } = allContentIds.length > 0 && user
+    ? await supabase
+        .from('user_content_progress')
+        .select('content_id')
+        .eq('user_id', user.id)
+        .in('content_id', allContentIds)
+    : { data: [] as { content_id: string }[] }
+
+  const viewedIds = new Set((viewedRows ?? []).map((r) => r.content_id))
+  const totalContents = allContentIds.length
+  const viewedCount = viewedIds.size
+  const progressPct = totalContents > 0 ? Math.round((viewedCount / totalContents) * 100) : 0
 
   const grouped: Record<ComplexityLevel, Content[]> = {
     basico: [],
@@ -98,10 +116,39 @@ export default async function ProductoPage({
         )}
       </div>
 
+      {/* Barra de progreso global del producto */}
+      {totalContents > 0 && (
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-[var(--text-primary)]">Tu progreso</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-[var(--text-muted)]">
+                {viewedCount} de {totalContents} materiales
+              </span>
+              {progressPct === 100 && (
+                <span className="rounded-full bg-[var(--success)]/15 px-2 py-0.5 text-xs font-medium text-[var(--success)]">
+                  Completado
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="h-2 w-full rounded-full bg-[var(--bg-card)] overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${progressPct}%`,
+                backgroundColor: progressPct === 100 ? 'var(--success)' : 'var(--accent)',
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Tabs de nivel */}
       <div className="flex gap-1 border-b border-[var(--border)]">
         {LEVELS.map((level) => {
           const count = grouped[level].length
+          const levelViewed = grouped[level].filter((c) => viewedIds.has(c.id)).length
           return (
             <Link
               key={level}
@@ -123,7 +170,7 @@ export default async function ProductoPage({
                       : 'bg-[var(--bg-card)] text-[var(--text-muted)]',
                   ].join(' ')}
                 >
-                  {count}
+                  {levelViewed}/{count}
                 </span>
               )}
             </Link>
@@ -140,50 +187,86 @@ export default async function ProductoPage({
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {activeContents.map((content) => (
-            <Link
-              key={content.id}
-              href={`/contenido/${slug}/${content.id}`}
-              className="group flex items-start gap-4 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-4 transition-colors hover:border-[var(--accent)] hover:bg-[var(--bg-card)]"
-            >
-              <span
-                className={[
-                  'mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wide',
-                  content.type === 'video'
-                    ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
-                    : 'bg-[var(--warning)]/15 text-[var(--warning)]',
-                ].join(' ')}
+          {activeContents.map((content) => {
+            const isViewed = viewedIds.has(content.id)
+            return (
+              <Link
+                key={content.id}
+                href={`/contenido/${slug}/${content.id}`}
+                className="group flex items-start gap-4 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-4 transition-colors hover:border-[var(--accent)] hover:bg-[var(--bg-card)]"
               >
-                {TYPE_LABEL[content.type]}
-              </span>
+                {/* Indicador de visto */}
+                <div
+                  className={[
+                    'mt-0.5 shrink-0 flex h-5 w-5 items-center justify-center rounded-full border transition-colors',
+                    isViewed
+                      ? 'border-[var(--success)] bg-[var(--success)]/15'
+                      : 'border-[var(--border)] bg-transparent',
+                  ].join(' ')}
+                  title={isViewed ? 'Visto' : 'Pendiente'}
+                >
+                  {isViewed && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-[var(--success)]"
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  )}
+                </div>
 
-              <div className="min-w-0 flex-1">
-                <p className="font-medium text-[var(--text-primary)] transition-colors">
-                  {content.title}
-                </p>
-                {content.description && (
-                  <p className="mt-0.5 text-sm text-[var(--text-secondary)] line-clamp-2">
-                    {content.description}
+                <span
+                  className={[
+                    'mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wide',
+                    content.type === 'video'
+                      ? 'bg-[var(--accent)]/15 text-[var(--accent)]'
+                      : 'bg-[var(--warning)]/15 text-[var(--warning)]',
+                  ].join(' ')}
+                >
+                  {TYPE_LABEL[content.type]}
+                </span>
+
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={[
+                      'font-medium transition-colors',
+                      isViewed ? 'text-[var(--text-secondary)]' : 'text-[var(--text-primary)]',
+                    ].join(' ')}
+                  >
+                    {content.title}
                   </p>
-                )}
-              </div>
+                  {content.description && (
+                    <p className="mt-0.5 text-sm text-[var(--text-secondary)] line-clamp-2">
+                      {content.description}
+                    </p>
+                  )}
+                </div>
 
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="mt-0.5 shrink-0 text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors"
-              >
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </Link>
-          ))}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mt-0.5 shrink-0 text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors"
+                >
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

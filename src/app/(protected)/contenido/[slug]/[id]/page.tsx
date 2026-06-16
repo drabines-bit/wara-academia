@@ -49,15 +49,25 @@ export default async function ContenidoViewerPage({
   const { slug, id } = await params
   const supabase = await createClient()
 
-  const [productResult, contentResult] = await Promise.all([
+  const [productResult, contentResult, authResult] = await Promise.all([
     supabase.from('products').select('*').eq('slug', slug).single(),
     supabase.from('contents').select('*').eq('id', id).single(),
+    supabase.auth.getUser(),
   ])
 
   const product = productResult.data
   const content = contentResult.data
+  const user = authResult.data.user
 
   if (!product || !content || content.product_id !== product.id) notFound()
+
+  // Registrar este contenido como visto (upsert es idempotente)
+  if (user) {
+    await supabase.from('user_content_progress').upsert(
+      { user_id: user.id, content_id: content.id },
+      { onConflict: 'user_id,content_id' }
+    )
+  }
 
   // Contenido del mismo nivel para navegación siguiente/anterior
   const { data: levelContents } = await supabase
@@ -90,7 +100,7 @@ export default async function ContenidoViewerPage({
         <span className="text-[var(--text-secondary)] truncate">{content.title}</span>
       </nav>
 
-      {/* Metadatos: contexto antes del contenido */}
+      {/* Metadatos */}
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span
@@ -124,7 +134,7 @@ export default async function ContenidoViewerPage({
         type={content.type}
       />
 
-      {/* Navegación inferior: Volver + Siguiente */}
+      {/* Navegación inferior */}
       <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
         <Link
           href={`/contenido/${slug}?nivel=${content.complexity}`}
