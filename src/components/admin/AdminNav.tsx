@@ -25,11 +25,9 @@ export function AdminNav() {
       <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg-surface)]">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
-            <div className="h-7 w-7 rounded-md bg-[var(--accent)] flex items-center justify-center">
-              <span className="text-xs font-bold text-white">W</span>
-            </div>
+            <img src="/logo.svg" alt="WARA GPS" className="h-7 w-auto" />
             <span className="font-semibold text-[var(--text-primary)] text-sm">
-              Academia WARA
+              Academia WARA GPS
               <span className="ml-1.5 rounded bg-[var(--bg-card)] px-1.5 py-0.5 text-[10px] text-[var(--text-muted)]">
                 Admin
               </span>
