@@ -1,5 +1,6 @@
 import { AlumnoNav } from '@/components/alumno/AlumnoNav'
 import { Footer } from '@/components/Footer'
+import { FloatingButtons } from '@/components/alumno/FloatingButtons'
 
 export default function ContenidoLayout({
   children,
@@ -13,6 +14,7 @@ export default function ContenidoLayout({
         {children}
       </main>
       <Footer />
+      <FloatingButtons />
     </div>
   )
 }
