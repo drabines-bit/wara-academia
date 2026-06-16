@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { ThemeSync } from '@/components/alumno/ThemeSync'
+import { SpotifyWidget } from '@/components/alumno/SpotifyWidget'
 import type { UserStatus } from '@/types/database'
 
-// Verifica sesión activa + status approved. Nunca delegar esta comprobación solo al proxy.
 export default async function ProtectedLayout({
   children,
 }: {
@@ -17,12 +18,27 @@ export default async function ProtectedLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('status')
+    .select('status, preferred_theme, spotify_embed_url')
     .eq('id', user.id)
-    .single() as { data: { status: UserStatus } | null; error: unknown }
+    .single() as {
+    data: {
+      status: UserStatus
+      preferred_theme: number
+      spotify_embed_url: string | null
+    } | null
+    error: unknown
+  }
 
   if (!profile || profile.status === 'pending') redirect('/pendiente')
   if (profile.status === 'rejected') redirect('/login?rechazado=true')
 
-  return <>{children}</>
+  return (
+    <>
+      <ThemeSync theme={profile.preferred_theme} />
+      {profile.spotify_embed_url && (
+        <SpotifyWidget embedUrl={profile.spotify_embed_url} />
+      )}
+      {children}
+    </>
+  )
 }
