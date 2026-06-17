@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { ProductGrid } from '@/components/alumno/ProductGrid'
 
 export const metadata: Metadata = { title: 'Inicio — Academia WARA GPS' }
+
+export const dynamic = 'force-dynamic'
 
 export default async function ContenidoPage() {
   const supabase = await createClient()
@@ -49,7 +51,7 @@ export default async function ContenidoPage() {
   const { data: products } = await productsQuery
 
   // Progreso por producto
-  let progressByProduct: Record<string, { total: number; viewed: number }> = {}
+  const progressByProduct: Record<string, { total: number; viewed: number }> = {}
 
   if (products?.length && user) {
     const productIds = products.map((p) => p.id)
@@ -83,16 +85,27 @@ export default async function ContenidoPage() {
   if (!products?.length) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="h-12 w-12 rounded-full bg-[var(--bg-card)] flex items-center justify-center mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--text-muted)]">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--bg-card)]">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="26"
+            height="26"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="animate-float text-[var(--text-muted)]"
+          >
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
           </svg>
         </div>
         <p className="text-[var(--text-muted)]">
           Todavía no hay capacitaciones disponibles.
         </p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
-          Volvé más tarde o contactá a tu administrador.
+          Volvé más tarde o contactate con tu administrador.
         </p>
       </div>
     )
@@ -101,80 +114,17 @@ export default async function ContenidoPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">
+        <h1 className="animate-fade-up text-2xl font-bold text-[var(--text-primary)]">
           {firstName ? `Hola, ${firstName}` : 'Tus capacitaciones'}
         </h1>
-        <p className="mt-1 text-sm text-[var(--text-secondary)]">
+        <p className="animate-fade-up-delayed mt-1 text-sm text-[var(--text-secondary)]">
           {firstName
             ? '¿Sobre qué querés aprender hoy?'
             : 'Seleccioná un producto para ver el material disponible.'}
         </p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {products.map((product) => {
-          const prog = progressByProduct[product.id]
-          const total = prog?.total ?? 0
-          const viewed = prog?.viewed ?? 0
-          const pct = total > 0 ? Math.round((viewed / total) * 100) : 0
-          const isComplete = total > 0 && viewed === total
-
-          return (
-            <Link
-              key={product.id}
-              href={`/contenido/${product.slug}`}
-              className="group flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6 transition-colors hover:border-[var(--accent)] hover:bg-[var(--bg-card)]"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="text-lg font-semibold text-[var(--text-primary)] transition-colors">
-                  {product.name}
-                </h2>
-                {isComplete && (
-                  <span className="shrink-0 rounded-full bg-[var(--success)]/15 px-2 py-0.5 text-xs font-medium text-[var(--success)]">
-                    Completado
-                  </span>
-                )}
-              </div>
-
-              {product.description && (
-                <p className="mt-2 flex-1 text-sm text-[var(--text-secondary)] leading-relaxed">
-                  {product.description}
-                </p>
-              )}
-
-              {/* Barra de progreso */}
-              {total > 0 && (
-                <div className="mt-4 flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-[var(--text-muted)]">
-                      {viewed} de {total} materiales
-                    </span>
-                    <span className="text-xs font-medium" style={{ color: isComplete ? 'var(--success)' : 'var(--text-muted)' }}>
-                      {pct}%
-                    </span>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-[var(--bg-card)] overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${pct}%`,
-                        backgroundColor: isComplete ? 'var(--success)' : 'var(--accent)',
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-[var(--accent)]">
-                Ver contenido
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </span>
-            </Link>
-          )
-        })}
-      </div>
+      <ProductGrid products={products} progressByProduct={progressByProduct} />
     </div>
   )
 }
