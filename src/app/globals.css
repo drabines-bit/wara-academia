@@ -112,6 +112,12 @@ body {
   border-radius: 3px;
 }
 
+/* ─── Input focus glow ───────────────────────────────────────────────────────── */
+input:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  transition: box-shadow 0.15s ease;
+}
+
 /* ─── Reduced motion ─────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   .animate-pulse {
@@ -122,6 +128,8 @@ body {
     animation: none;
   }
   * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
