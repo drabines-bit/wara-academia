@@ -11,7 +11,7 @@ export const footerConfig = {
 
   // Contacto — valor real o '' para ocultar
   email: 'comercial@waragps.com',                  // ej: 'contacto@waragps.com.ar'
-  whatsapp: '',               // solo números en formato internacional, sin + (ej: '5491122334455')
+  whatsapp: '5492617514528',               // solo números en formato internacional, sin + (ej: '5491122334455')
 
   // Dirección con enlace a Google Maps
   maps: {

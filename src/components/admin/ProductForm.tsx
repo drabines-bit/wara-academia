@@ -97,7 +97,7 @@ export function ProductForm({
 
       <div className="flex gap-3">
         <Button type="submit" loading={isPending}>
-          {product ? 'Guardar cambios' : 'Crear producto'}
+          {product ? 'Guardar cambios' : 'Crear curso'}
         </Button>
         <a
           href="/admin/productos"

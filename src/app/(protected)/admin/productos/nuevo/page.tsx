@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ProductForm } from '@/components/admin/ProductForm'
 
-export const metadata: Metadata = { title: 'Nuevo producto — Admin' }
+export const metadata: Metadata = { title: 'Nuevo curso — Admin' }
 
 export default async function NuevoProductoPage() {
   const supabase = await createClient()
@@ -20,10 +20,10 @@ export default async function NuevoProductoPage() {
           href="/admin/productos"
           className="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
         >
-          ← Productos
+          ← Cursos
         </Link>
         <h1 className="mt-2 text-xl font-bold text-[var(--text-primary)]">
-          Nuevo producto
+          Nuevo curso
         </h1>
       </div>
       <ProductForm categories={categories ?? []} />

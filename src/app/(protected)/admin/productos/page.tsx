@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { deleteProduct } from '@/app/actions/admin'
 import { DeleteButton } from '@/components/admin/DeleteButton'
 
-export const metadata: Metadata = { title: 'Productos — Admin' }
+export const metadata: Metadata = { title: 'Cursos — Admin' }
 
 export default async function ProductosPage() {
   const supabase = await createClient()
@@ -21,7 +21,7 @@ export default async function ProductosPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[var(--text-primary)]">Productos</h1>
+        <h1 className="text-xl font-bold text-[var(--text-primary)]">Cursos</h1>
         <Link
           href="/admin/productos/nuevo"
           className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-fg)] hover:bg-[var(--accent-hover)] transition-colors"
@@ -32,7 +32,7 @@ export default async function ProductosPage() {
 
       {!products?.length ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-8 text-center">
-          <p className="text-[var(--text-muted)]">No hay productos todavía.</p>
+          <p className="text-[var(--text-muted)]">No hay cursos todavía.</p>
           <Link
             href="/admin/productos/nuevo"
             className="mt-3 inline-block text-sm text-[var(--accent)] hover:underline"

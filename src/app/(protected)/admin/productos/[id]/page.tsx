@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ProductForm } from '@/components/admin/ProductForm'
 import type { Product } from '@/types/database'
 
-export const metadata: Metadata = { title: 'Editar producto — Admin' }
+export const metadata: Metadata = { title: 'Editar curso — Admin' }
 
 export default async function EditarProductoPage({
   params,
@@ -36,7 +36,7 @@ export default async function EditarProductoPage({
           href="/admin/productos"
           className="text-sm text-[var(--text-muted)] hover:text-[var(--accent)] transition-colors"
         >
-          ← Productos
+          ← Cursos
         </Link>
         <h1 className="mt-2 text-xl font-bold text-[var(--text-primary)]">
           Editar: {product.name}

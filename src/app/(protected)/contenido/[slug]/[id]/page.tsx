@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { DriveViewer } from '@/components/alumno/DriveViewer'
+import { FelicitacionCurso } from '@/components/alumno/FelicitacionCurso'
 import type { ComplexityLevel } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -71,11 +72,28 @@ export default async function ContenidoViewerPage({
   if (!product || !content || content.product_id !== product.id) notFound()
 
   // Registrar este contenido como visto (upsert es idempotente)
+  let cursoCompleto = false
   if (user) {
     await supabase.from('user_content_progress').upsert(
       { user_id: user.id, content_id: content.id },
       { onConflict: 'user_id,content_id' }
     )
+
+    // Verificar si el alumno completó todo el curso
+    const { data: todosLosContenidos } = await supabase
+      .from('contents')
+      .select('id')
+      .eq('product_id', product.id)
+
+    if (todosLosContenidos && todosLosContenidos.length > 0) {
+      const { count: vistos } = await supabase
+        .from('user_content_progress')
+        .select('content_id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .in('content_id', todosLosContenidos.map((c) => c.id))
+
+      cursoCompleto = vistos !== null && vistos === todosLosContenidos.length
+    }
   }
 
   // Contenido del mismo nivel para navegación siguiente/anterior
@@ -140,6 +158,9 @@ export default async function ContenidoViewerPage({
         title={content.title}
         type={content.type}
       />
+
+      {/* Felicitación al completar el curso */}
+      {cursoCompleto && <FelicitacionCurso productName={product.name} />}
 
       {/* Navegación inferior */}
       <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">

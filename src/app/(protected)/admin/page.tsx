@@ -21,7 +21,7 @@ export default async function AdminPage() {
       urgent: (pendingResult.count ?? 0) > 0,
     },
     {
-      label: 'Productos',
+      label: 'Cursos',
       value: productsResult.count ?? 0,
       href: '/admin/productos',
       urgent: false,
@@ -41,7 +41,7 @@ export default async function AdminPage() {
           Panel de administración
         </h1>
         <p className="mt-1 text-sm text-[var(--text-secondary)]">
-          Gestioná usuarios, productos y contenidos de la Academia WARA GPS.
+          Gestioná usuarios, cursos y contenidos de la Academia WARA GPS.
         </p>
       </div>
 
@@ -75,7 +75,7 @@ export default async function AdminPage() {
           href="/admin/productos/nuevo"
           className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
         >
-          + Nuevo producto
+          + Nuevo curso
         </Link>
         <Link
           href="/admin/contenidos/nuevo"
