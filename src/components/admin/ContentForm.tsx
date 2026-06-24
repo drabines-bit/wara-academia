@@ -38,7 +38,7 @@ export function ContentForm({
 
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium text-[var(--text-secondary)]">
-          Producto
+          Curso
         </label>
         <select
           name="product_id"
@@ -46,7 +46,7 @@ export function ContentForm({
           defaultValue={content?.product_id}
           className={SELECT_CLASS}
         >
-          <option value="">Seleccioná un producto</option>
+          <option value="">Seleccioná un curso</option>
           {products.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
