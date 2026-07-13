@@ -6,7 +6,7 @@ export function SpotifyWidget({ embedUrl }: { embedUrl: string }) {
   const [minimized, setMinimized] = useState(false)
 
   return (
-    <div className="fixed bottom-0 right-4 z-50 hidden md:flex flex-col items-end">
+    <div className="fixed bottom-24 right-4 z-40 hidden md:flex flex-col items-end">
       <button
         onClick={() => setMinimized((v) => !v)}
         title={minimized ? 'Mostrar reproductor' : 'Minimizar'}
@@ -22,7 +22,7 @@ export function SpotifyWidget({ embedUrl }: { embedUrl: string }) {
           height="80"
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
           loading="lazy"
-          className="rounded-t-xl border-t border-x border-[var(--border)] shadow-2xl"
+          className="rounded-xl border border-[var(--border)] shadow-2xl"
         />
       )}
     </div>

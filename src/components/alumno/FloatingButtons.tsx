@@ -25,7 +25,7 @@ export function FloatingButtons() {
         onClick={scrollToTop}
         aria-label="Volver al inicio de la página"
         className={[
-          'fixed bottom-6 left-6 z-50 flex h-12 w-12 items-center justify-center rounded-full',
+          'fixed bottom-20 left-4 md:bottom-6 md:left-6 z-50 flex h-12 w-12 items-center justify-center rounded-full',
           'bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-secondary)]',
           'shadow-md hover:shadow-lg hover:border-[var(--accent)] hover:text-[var(--accent)]',
           'transition-all duration-300 ease-out',
@@ -58,7 +58,7 @@ export function FloatingButtons() {
           rel="noopener noreferrer"
           aria-label="Contactar por WhatsApp"
           className={[
-            'fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full',
+            'fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full',
             'bg-[#25D366] text-white shadow-md hover:shadow-lg hover:bg-[#20c25d]',
             'transition-all duration-200 ease-out active:scale-95',
           ].join(' ')}

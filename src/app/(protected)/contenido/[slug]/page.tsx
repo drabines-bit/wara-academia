@@ -41,7 +41,7 @@ export async function generateMetadata({
     .eq('slug', slug)
     .single()
   return {
-    title: product ? `${product.name} — Academia WARA GPS` : 'Producto — Academia WARA GPS',
+    title: product ? `${product.name} — Academia WARA GPS` : 'Curso — Academia WARA GPS',
   }
 }
 
@@ -154,7 +154,7 @@ export default async function ProductoPage({
       )}
 
       {/* Tabs de nivel */}
-      <div className="flex gap-1 border-b border-[var(--border)]">
+      <div className="flex gap-1 border-b border-[var(--border)] overflow-x-auto whitespace-nowrap">
         {LEVELS.map((level) => {
           const count = grouped[level].length
           const levelViewed = grouped[level].filter((c) => viewedIds.has(c.id)).length
@@ -191,7 +191,7 @@ export default async function ProductoPage({
       {activeContents.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] py-12 text-center">
           <p className="text-sm text-[var(--text-muted)]">
-            Todavía no hay contenido {LEVEL_LABEL[activeLevel].toLowerCase()} para este producto.
+            Todavía no hay contenido {LEVEL_LABEL[activeLevel].toLowerCase()} para este curso.
           </p>
         </div>
       ) : (

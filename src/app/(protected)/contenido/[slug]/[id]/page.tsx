@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { DriveViewer } from '@/components/alumno/DriveViewer'
-import { FelicitacionCurso } from '@/components/alumno/FelicitacionCurso'
+import { ViewedTracker } from '@/components/alumno/ViewedTracker'
 import type { ComplexityLevel } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -69,32 +69,7 @@ export default async function ContenidoViewerPage({
   const content = contentResult.data
   const user = authResult.data.user
 
-  if (!product || !content || content.product_id !== product.id) notFound()
-
-  // Registrar este contenido como visto (upsert es idempotente)
-  let cursoCompleto = false
-  if (user) {
-    await supabase.from('user_content_progress').upsert(
-      { user_id: user.id, content_id: content.id },
-      { onConflict: 'user_id,content_id' }
-    )
-
-    // Verificar si el alumno completó todo el curso
-    const { data: todosLosContenidos } = await supabase
-      .from('contents')
-      .select('id')
-      .eq('product_id', product.id)
-
-    if (todosLosContenidos && todosLosContenidos.length > 0) {
-      const { count: vistos } = await supabase
-        .from('user_content_progress')
-        .select('content_id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .in('content_id', todosLosContenidos.map((c) => c.id))
-
-      cursoCompleto = vistos !== null && vistos === todosLosContenidos.length
-    }
-  }
+  if (!user || !product || !content || content.product_id !== product.id) notFound()
 
   // Contenido del mismo nivel para navegación siguiente/anterior
   const { data: levelContents } = await supabase
@@ -119,7 +94,7 @@ export default async function ContenidoViewerPage({
         <span aria-hidden="true">/</span>
         <Link
           href={`/contenido/${slug}?nivel=${content.complexity}`}
-          className="hover:text-[var(--accent)] transition-colors"
+          className="truncate hover:text-[var(--accent)] transition-colors"
         >
           {product.name}
         </Link>
@@ -159,8 +134,9 @@ export default async function ContenidoViewerPage({
         type={content.type}
       />
 
-      {/* Felicitación al completar el curso */}
-      {cursoCompleto && <FelicitacionCurso productName={product.name} />}
+      {/* Marca como visto tras permanencia mínima; muestra la felicitación
+          solo en la visita que completa el 100% del curso */}
+      <ViewedTracker contentId={content.id} productName={product.name} />
 
       {/* Navegación inferior */}
       <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
