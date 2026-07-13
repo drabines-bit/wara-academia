@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 
 type MarkViewedResult = {
@@ -49,6 +50,10 @@ export async function markContentViewed(contentId: string): Promise<MarkViewedRe
 
   viewedBefore.add(contentId)
   const isComplete = allIds.every((id) => viewedBefore.has(id))
+
+  // Purga el router cache del cliente: el checkmark aparece en vivo
+  // al volver a la lista del curso o al home
+  revalidatePath('/contenido', 'layout')
 
   return { justCompleted: !wasComplete && isComplete }
 }

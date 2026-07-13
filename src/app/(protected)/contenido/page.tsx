@@ -2,12 +2,19 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ProductGrid } from '@/components/alumno/ProductGrid'
+import { ContentSearch, type SearchItem } from '@/components/alumno/ContentSearch'
 
 const LEVEL_ORDER: Record<string, number> = { basico: 0, intermedio: 1, avanzado: 2 }
 const LEVEL_LABEL: Record<string, string> = {
   basico: 'Básico',
   intermedio: 'Intermedio',
   avanzado: 'Avanzado',
+}
+const TYPE_LABEL: Record<string, string> = {
+  video: 'Video',
+  pdf: 'PDF',
+  audio: 'Audio',
+  otro: 'Descargable',
 }
 
 export const metadata: Metadata = { title: 'Inicio — Academia WARA GPS' }
@@ -58,8 +65,9 @@ export default async function ContenidoPage() {
 
   const { data: products } = await productsQuery
 
-  // Progreso por producto + "Continuar donde dejaste"
+  // Progreso por producto + "Continuar donde dejaste" + índice de búsqueda
   const progressByProduct: Record<string, { total: number; viewed: number }> = {}
+  const searchItems: SearchItem[] = []
   let continueTarget: {
     href: string
     title: string
@@ -72,7 +80,7 @@ export default async function ContenidoPage() {
 
     const { data: allContents } = await supabase
       .from('contents')
-      .select('id, product_id, title, complexity, sort_order')
+      .select('id, product_id, title, description, type, complexity, sort_order')
       .in('product_id', productIds)
 
     const allContentIds = (allContents ?? []).map((c) => c.id)
@@ -87,12 +95,27 @@ export default async function ContenidoPage() {
 
     const viewedSet = new Set((viewedRows ?? []).map((r) => r.content_id))
 
+    const productById = new Map(products.map((p) => [p.id, p]))
+
     for (const c of allContents ?? []) {
       if (!progressByProduct[c.product_id]) {
         progressByProduct[c.product_id] = { total: 0, viewed: 0 }
       }
       progressByProduct[c.product_id].total++
       if (viewedSet.has(c.id)) progressByProduct[c.product_id].viewed++
+
+      const p = productById.get(c.product_id)
+      if (p) {
+        searchItems.push({
+          id: c.id,
+          title: c.title,
+          description: c.description,
+          productName: p.name,
+          productSlug: p.slug,
+          levelLabel: LEVEL_LABEL[c.complexity] ?? c.complexity,
+          typeLabel: TYPE_LABEL[c.type] ?? c.type,
+        })
+      }
     }
 
     // Último contenido visto → siguiente pendiente del mismo curso
@@ -169,6 +192,8 @@ export default async function ContenidoPage() {
             : 'Seleccioná un curso para ver el material disponible.'}
         </p>
       </div>
+
+      {searchItems.length > 0 && <ContentSearch items={searchItems} />}
 
       {continueTarget && (
         <Link
