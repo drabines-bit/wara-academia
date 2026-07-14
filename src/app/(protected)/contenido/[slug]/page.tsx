@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { CertificateButton } from '@/components/alumno/CertificateButton'
+import { getMandatoryGate } from '@/lib/onboarding'
 import type { ComplexityLevel, Content } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -71,6 +72,12 @@ export default async function ProductoPage({
   const user = authResult.data.user
 
   if (!product) notFound()
+
+  // Curso obligatorio pendiente → solo se puede navegar ese curso
+  if (!product.is_mandatory) {
+    const { gated } = await getMandatoryGate()
+    if (gated) redirect('/contenido')
+  }
 
   const { data: contents } = await supabase
     .from('contents')

@@ -21,10 +21,62 @@ const cardVariant = {
 export function ProductGrid({
   products,
   progressByProduct,
+  locked = false,
 }: {
   products: Product[]
   progressByProduct: ProgressMap
+  locked?: boolean
 }) {
+  if (locked) {
+    return (
+      <motion.div
+        className="grid gap-4 sm:grid-cols-2"
+        variants={container}
+        initial="hidden"
+        animate="visible"
+      >
+        {products.map((product) => (
+          <motion.div key={product.id} variants={cardVariant}>
+            <div
+              aria-disabled="true"
+              className="flex h-full flex-col rounded-2xl border border-[var(--border)] bg-[var(--bg-surface)] p-6 opacity-55 select-none"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+                  {product.name}
+                </h2>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                  className="mt-1 shrink-0 text-[var(--text-muted)]"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
+              {product.description && (
+                <p className="mt-2 flex-1 text-sm text-[var(--text-secondary)] leading-relaxed">
+                  {product.description}
+                </p>
+              )}
+              <p className="mt-4 text-xs text-[var(--text-muted)]">
+                Se desbloquea al completar el curso obligatorio.
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </motion.div>
+    )
+  }
+
   return (
     <motion.div
       className="grid gap-4 sm:grid-cols-2"

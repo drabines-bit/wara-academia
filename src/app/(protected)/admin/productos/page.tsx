@@ -50,6 +50,11 @@ export default async function ProductosPage() {
               <div className="min-w-0">
                 <p className="font-medium text-[var(--text-primary)] truncate">
                   {p.name}
+                  {p.is_mandatory && (
+                    <span className="ml-2 rounded-full bg-[var(--warning)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--warning)] align-middle">
+                      Obligatorio
+                    </span>
+                  )}
                 </p>
                 <p className="text-xs text-[var(--text-muted)]">
                   /{p.slug} · orden {p.sort_order}

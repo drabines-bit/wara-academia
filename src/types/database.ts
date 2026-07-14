@@ -72,6 +72,7 @@ export interface Database {
           description: string | null
           sort_order: number
           category_id: string | null
+          is_mandatory: boolean
           created_at: string
         }
         Insert: {
@@ -81,6 +82,7 @@ export interface Database {
           description?: string | null
           sort_order?: number
           category_id?: string | null
+          is_mandatory?: boolean
           created_at?: string
         }
         Update: {
@@ -90,6 +92,7 @@ export interface Database {
           description?: string | null
           sort_order?: number
           category_id?: string | null
+          is_mandatory?: boolean
           created_at?: string
         }
         Relationships: [
@@ -263,6 +266,27 @@ export interface Database {
           },
         ]
       }
+      welcome_settings: {
+        Row: {
+          id: boolean
+          title: string
+          body: string
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          title?: string
+          body?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          title?: string
+          body?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       certificate_settings: {
         Row: {
           id: boolean
@@ -326,3 +350,4 @@ export type Product = Database['public']['Tables']['products']['Row']
 export type Content = Database['public']['Tables']['contents']['Row']
 export type Notification = Database['public']['Tables']['notifications']['Row']
 export type CertificateSettings = Database['public']['Tables']['certificate_settings']['Row']
+export type WelcomeSettings = Database['public']['Tables']['welcome_settings']['Row']

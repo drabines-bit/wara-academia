@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { DriveViewer } from '@/components/alumno/DriveViewer'
 import { ViewedTracker } from '@/components/alumno/ViewedTracker'
+import { getMandatoryGate } from '@/lib/onboarding'
 import type { ComplexityLevel } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -70,6 +71,12 @@ export default async function ContenidoViewerPage({
   const user = authResult.data.user
 
   if (!user || !product || !content || content.product_id !== product.id) notFound()
+
+  // Curso obligatorio pendiente → solo se puede ver contenido de ese curso
+  if (!product.is_mandatory) {
+    const { gated } = await getMandatoryGate()
+    if (gated) redirect('/contenido')
+  }
 
   // Contenido del mismo nivel para navegación siguiente/anterior
   const { data: levelContents } = await supabase

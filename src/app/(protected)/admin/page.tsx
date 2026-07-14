@@ -101,6 +101,12 @@ export default async function AdminPage() {
         >
           🔌 Conexión a Odoo
         </Link>
+        <Link
+          href="/admin/bienvenida"
+          className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          👋 Pantalla de bienvenida
+        </Link>
       </div>
     </div>
   )

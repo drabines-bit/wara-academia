@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ProductGrid } from '@/components/alumno/ProductGrid'
 import { ContentSearch, type SearchItem } from '@/components/alumno/ContentSearch'
+import { getWelcomeSettings } from '@/lib/onboarding'
 
 const LEVEL_ORDER: Record<string, number> = { basico: 0, intermedio: 1, avanzado: 2 }
 const LEVEL_LABEL: Record<string, string> = {
@@ -28,7 +29,7 @@ export default async function ContenidoPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name')
+    .select('full_name, role')
     .eq('id', user!.id)
     .single()
 
@@ -176,6 +177,70 @@ export default async function ContenidoPage() {
         <p className="mt-1 text-xs text-[var(--text-muted)]">
           Volvé más tarde o contactate con tu administrador.
         </p>
+      </div>
+    )
+  }
+
+  // ── Gate de curso obligatorio ────────────────────────────────────────────────
+  // Mientras haya un curso obligatorio con contenido sin completar al 100%,
+  // el home muestra la bienvenida + ese curso, y el resto queda bloqueado.
+  const mandatoryProducts = products.filter((p) => p.is_mandatory)
+  const mandatoryPending =
+    profile?.role !== 'admin' &&
+    mandatoryProducts.some((p) => {
+      const prog = progressByProduct[p.id]
+      return prog && prog.total > 0 && prog.viewed < prog.total
+    })
+
+  if (mandatoryPending) {
+    const welcome = await getWelcomeSettings()
+    const restProducts = products.filter((p) => !p.is_mandatory)
+
+    return (
+      <div className="flex flex-col gap-8">
+        {/* Bienvenida */}
+        <div className="max-w-2xl">
+          <h1 className="animate-fade-up text-2xl font-bold text-[var(--text-primary)]">
+            {firstName ? `${welcome.title.replace(/!$/, '')}, ${firstName}!` : welcome.title}
+          </h1>
+          <div className="animate-fade-up-delayed mt-3 flex flex-col gap-3">
+            {welcome.body.split(/\n\s*\n/).map((paragraph, i) => (
+              <p key={i} className="text-sm leading-relaxed text-[var(--text-secondary)]">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        </div>
+
+        {/* Curso obligatorio */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+              Tu primer paso
+            </h2>
+            <span className="rounded-full bg-[var(--warning)]/15 px-2 py-0.5 text-xs font-medium text-[var(--warning)]">
+              Obligatorio
+            </span>
+          </div>
+          <ProductGrid
+            products={mandatoryProducts}
+            progressByProduct={progressByProduct}
+          />
+        </div>
+
+        {/* Resto bloqueado */}
+        {restProducts.length > 0 && (
+          <div className="flex flex-col gap-3">
+            <h2 className="text-sm font-semibold text-[var(--text-muted)]">
+              Estos cursos se desbloquean al completar el curso obligatorio
+            </h2>
+            <ProductGrid
+              products={restProducts}
+              progressByProduct={progressByProduct}
+              locked
+            />
+          </div>
+        )}
       </div>
     )
   }

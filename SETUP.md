@@ -284,3 +284,19 @@ Cargar en `.env.local` y en Vercel (y redeployar):
 
 Sin estas variables la integración queda desactivada y todo funciona como
 antes (aprobación 100% manual).
+
+## 10. Onboarding: curso obligatorio y pantalla de bienvenida
+
+Ejecutar [`supabase/onboarding.sql`](supabase/onboarding.sql) en el SQL Editor
+de Supabase (idempotente). Agrega:
+
+- `products.is_mandatory`: los cursos marcados como obligatorios (checkbox en
+  el formulario de curso del admin) bloquean el resto de la academia hasta que
+  el alumno los complete al 100%. El script marca "Términos y Condiciones del
+  Servicio" automáticamente.
+- `welcome_settings`: título y texto de la pantalla de bienvenida que ve el
+  alumno mientras no completó el curso obligatorio. Editable en
+  `/admin/bienvenida`.
+
+Recomendación: los cursos obligatorios deben quedar **sin categoría** para que
+sean visibles para todos los alumnos.

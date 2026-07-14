@@ -91,6 +91,25 @@ export function ProductForm({
         min={0}
       />
 
+      <label className="flex items-start gap-2.5 cursor-pointer">
+        <input
+          type="checkbox"
+          name="is_mandatory"
+          defaultChecked={product?.is_mandatory ?? false}
+          className="mt-0.5 h-4 w-4 accent-[var(--accent)]"
+        />
+        <span className="flex flex-col">
+          <span className="text-sm font-medium text-[var(--text-secondary)]">
+            Curso obligatorio
+          </span>
+          <span className="text-xs text-[var(--text-muted)]">
+            Los alumnos deben completarlo al 100% antes de poder acceder al
+            resto de los cursos. Conviene dejarlo sin categoría para que sea
+            visible para todos.
+          </span>
+        </span>
+      </label>
+
       {state?.error && (
         <p className="text-sm text-[var(--danger)]">{state.error}</p>
       )}

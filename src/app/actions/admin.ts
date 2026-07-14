@@ -228,13 +228,14 @@ export async function createProduct(
   const description = (formData.get('description') as string)?.trim() || null
   const sort_order = Number(formData.get('sort_order') ?? 0)
   const category_id = (formData.get('category_id') as string) || null
+  const is_mandatory = formData.get('is_mandatory') === 'on'
 
   if (!name) return { error: 'El nombre es requerido.' }
   const slug = slugInput || slugify(name)
 
   const { error } = await supabase
     .from('products')
-    .insert({ name, slug, description, sort_order, category_id })
+    .insert({ name, slug, description, sort_order, category_id, is_mandatory })
 
   if (error) {
     if (error.message.includes('unique')) return { error: 'Ya existe un producto con ese slug.' }
@@ -257,13 +258,14 @@ export async function updateProduct(
   const description = (formData.get('description') as string)?.trim() || null
   const sort_order = Number(formData.get('sort_order') ?? 0)
   const category_id = (formData.get('category_id') as string) || null
+  const is_mandatory = formData.get('is_mandatory') === 'on'
 
   if (!name) return { error: 'El nombre es requerido.' }
   if (!slug) return { error: 'El slug es requerido.' }
 
   const { error } = await supabase
     .from('products')
-    .update({ name, slug, description, sort_order, category_id })
+    .update({ name, slug, description, sort_order, category_id, is_mandatory })
     .eq('id', id)
 
   if (error) {
@@ -347,6 +349,37 @@ export async function deleteContent(formData: FormData) {
   const id = formData.get('id') as string
   await supabase.from('contents').delete().eq('id', id)
   revalidatePath('/admin/contenidos')
+}
+
+// ── Pantalla de bienvenida ────────────────────────────────────────────────────
+
+export type WelcomeSettingsState =
+  | { error?: string; success?: boolean }
+  | undefined
+
+export async function updateWelcomeSettings(
+  _prevState: WelcomeSettingsState,
+  formData: FormData
+): Promise<WelcomeSettingsState> {
+  await assertAdmin()
+
+  const title = (formData.get('title') as string)?.trim()
+  const body = (formData.get('body') as string)?.trim()
+
+  if (!title) return { error: 'El título es requerido.' }
+  if (!body) return { error: 'El texto de bienvenida es requerido.' }
+  if (title.length > 120) return { error: 'El título no puede superar los 120 caracteres.' }
+  if (body.length > 4000) return { error: 'El texto no puede superar los 4000 caracteres.' }
+
+  const service = createServiceClient()
+  const { error } = await service
+    .from('welcome_settings')
+    .upsert({ id: true, title, body, updated_at: new Date().toISOString() })
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/bienvenida')
+  revalidatePath('/contenido')
+  return { success: true }
 }
 
 // ── Diagnóstico de Odoo ────────────────────────────────────────────────────────
