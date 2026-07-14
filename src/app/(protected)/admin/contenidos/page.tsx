@@ -37,12 +37,20 @@ export default async function ContenidosPage({
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-[var(--text-primary)]">Contenidos</h1>
-        <Link
-          href="/admin/contenidos/nuevo"
-          className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-fg)] hover:bg-[var(--accent-hover)] transition-colors"
-        >
-          + Nuevo
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/admin/contenidos/importar"
+            className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
+          >
+            Importar
+          </Link>
+          <Link
+            href="/admin/contenidos/nuevo"
+            className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-fg)] hover:bg-[var(--accent-hover)] transition-colors"
+          >
+            + Nuevo
+          </Link>
+        </div>
       </div>
 
       {/* Filtro por producto */}

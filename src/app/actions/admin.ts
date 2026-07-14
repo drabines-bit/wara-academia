@@ -327,3 +327,105 @@ export async function deleteContent(formData: FormData) {
   await supabase.from('contents').delete().eq('id', id)
   revalidatePath('/admin/contenidos')
 }
+
+// ── Importador masivo de contenidos ───────────────────────────────────────────
+
+const VALID_COMPLEXITY: ComplexityLevel[] = ['basico', 'intermedio', 'avanzado']
+const VALID_TYPES: ContentType[] = ['video', 'pdf', 'audio', 'otro']
+
+export type BulkRow = {
+  title: string
+  description: string | null
+  complexity: ComplexityLevel
+  type: ContentType
+  drive_file_id: string
+}
+
+export type BulkImportResult = {
+  created: number
+  skipped: { title: string; reason: string }[]
+  error?: string
+}
+
+/** Devuelve los drive_file_id que ya existen como contenido (para marcar duplicados en la vista previa) */
+export async function findExistingDriveIds(driveIds: string[]): Promise<string[]> {
+  const { supabase } = await assertAdmin()
+  if (driveIds.length === 0) return []
+
+  const { data } = await supabase
+    .from('contents')
+    .select('drive_file_id')
+    .in('drive_file_id', driveIds)
+
+  return (data ?? []).map((r) => r.drive_file_id)
+}
+
+export async function bulkCreateContents(
+  product_id: string,
+  rows: BulkRow[]
+): Promise<BulkImportResult> {
+  const { supabase, userId } = await assertAdmin()
+
+  if (!product_id) return { created: 0, skipped: [], error: 'Seleccioná un curso.' }
+  if (rows.length === 0) return { created: 0, skipped: [], error: 'No hay filas para importar.' }
+  if (rows.length > 200) return { created: 0, skipped: [], error: 'Máximo 200 contenidos por importación.' }
+
+  const skipped: BulkImportResult['skipped'] = []
+  const seen = new Set<string>()
+  const valid: BulkRow[] = []
+
+  // Re-chequear duplicados contra la base (la vista previa puede estar desactualizada)
+  const { data: existing } = await supabase
+    .from('contents')
+    .select('drive_file_id')
+    .in('drive_file_id', rows.map((r) => r.drive_file_id))
+  const existingIds = new Set((existing ?? []).map((r) => r.drive_file_id))
+
+  for (const row of rows) {
+    const title = row.title?.trim()
+    const drive_file_id = row.drive_file_id?.trim()
+
+    if (!title) { skipped.push({ title: drive_file_id || '(sin título)', reason: 'Falta el título' }); continue }
+    if (!drive_file_id) { skipped.push({ title, reason: 'Falta el ID de Drive' }); continue }
+    if (!VALID_COMPLEXITY.includes(row.complexity)) { skipped.push({ title, reason: 'Nivel inválido' }); continue }
+    if (!VALID_TYPES.includes(row.type)) { skipped.push({ title, reason: 'Tipo inválido' }); continue }
+    if (existingIds.has(drive_file_id)) { skipped.push({ title, reason: 'Ya existe un contenido con ese archivo de Drive' }); continue }
+    if (seen.has(drive_file_id)) { skipped.push({ title, reason: 'Duplicado dentro de la misma importación' }); continue }
+
+    seen.add(drive_file_id)
+    valid.push({ ...row, title, drive_file_id, description: row.description?.trim() || null })
+  }
+
+  if (valid.length === 0) return { created: 0, skipped }
+
+  // Continuar la numeración desde el último sort_order del curso
+  const { data: maxRow } = await supabase
+    .from('contents')
+    .select('sort_order')
+    .eq('product_id', product_id)
+    .order('sort_order', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const baseOrder = (maxRow?.sort_order ?? 0) + 1
+
+  const { error } = await supabase.from('contents').insert(
+    valid.map((row, i) => ({
+      product_id,
+      title: row.title,
+      description: row.description,
+      complexity: row.complexity,
+      type: row.type,
+      drive_file_id: row.drive_file_id,
+      sort_order: baseOrder + i,
+      created_by: userId,
+    }))
+  )
+
+  if (error) return { created: 0, skipped, error: error.message }
+
+  revalidatePath('/admin/contenidos')
+  revalidatePath('/contenido', 'layout')
+
+  return { created: valid.length, skipped }
+}
