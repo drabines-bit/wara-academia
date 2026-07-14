@@ -95,6 +95,12 @@ export default async function AdminPage() {
         >
           🎓 Plantilla de certificado
         </Link>
+        <Link
+          href="/admin/odoo"
+          className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          🔌 Conexión a Odoo
+        </Link>
       </div>
     </div>
   )

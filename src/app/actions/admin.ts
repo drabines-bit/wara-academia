@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { sendApprovalEmail, sendRejectionEmail } from '@/lib/email'
 import { getEligibleUserIds, notifyNewContent } from '@/lib/notifications'
+import { testOdooConnection, checkEmailInOdoo, type OdooConnectionTest, type OdooEmailCheck } from '@/lib/odoo'
 import { slugify } from '@/lib/utils'
 import type { ComplexityLevel, ContentType, UserRole, UserStatus } from '@/types/database'
 
@@ -346,6 +347,20 @@ export async function deleteContent(formData: FormData) {
   const id = formData.get('id') as string
   await supabase.from('contents').delete().eq('id', id)
   revalidatePath('/admin/contenidos')
+}
+
+// ── Diagnóstico de Odoo ────────────────────────────────────────────────────────
+
+export async function adminTestOdooConnection(): Promise<OdooConnectionTest> {
+  await assertAdmin()
+  return testOdooConnection()
+}
+
+export async function adminCheckEmailInOdoo(email: string): Promise<OdooEmailCheck> {
+  await assertAdmin()
+  const clean = email.trim()
+  if (!clean) return { ok: false, error: 'Ingresá un email.' }
+  return checkEmailInOdoo(clean)
 }
 
 // ── Plantilla de certificado ──────────────────────────────────────────────────
