@@ -61,6 +61,22 @@ export function UserCategorySelect({
 
   return (
     <div className="mt-2 flex flex-col gap-2">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setSelected(new Set(allCategories.map((c) => c.id)))}
+          disabled={isPending}
+          className="rounded-md border border-[var(--border)] px-2 py-0.5 text-xs text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          Todos
+        </button>
+        <button
+          onClick={() => setSelected(new Set())}
+          disabled={isPending}
+          className="rounded-md border border-[var(--border)] px-2 py-0.5 text-xs text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          Ninguno
+        </button>
+      </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1.5">
         {allCategories.map((c) => (
           <label key={c.id} className="flex items-center gap-1.5 cursor-pointer">

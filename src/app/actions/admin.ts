@@ -406,9 +406,13 @@ export async function scanDriveFolder(folderUrl: string): Promise<DriveScanResul
     do {
       const params = new URLSearchParams({
         q: `'${folderId}' in parents and trashed = false`,
-        fields: 'nextPageToken, files(id, name, mimeType)',
+        fields:
+          'nextPageToken, files(id, name, mimeType, shortcutDetails(targetId, targetMimeType))',
         pageSize: '100',
         orderBy: 'name',
+        // Sin estos dos parámetros la API excluye el contenido de unidades compartidas
+        supportsAllDrives: 'true',
+        includeItemsFromAllDrives: 'true',
         key: apiKey,
       })
       if (pageToken) params.set('pageToken', pageToken)
@@ -431,19 +435,33 @@ export async function scanDriveFolder(folderUrl: string): Promise<DriveScanResul
 
       const json = (await res.json()) as {
         nextPageToken?: string
-        files?: { id: string; name: string; mimeType: string }[]
+        files?: {
+          id: string
+          name: string
+          mimeType: string
+          shortcutDetails?: { targetId?: string; targetMimeType?: string }
+        }[]
       }
 
       for (const f of json.files ?? []) {
-        if (f.mimeType === 'application/vnd.google-apps.folder') {
+        // Resolver accesos directos al archivo real que apuntan
+        let id = f.id
+        let mime = f.mimeType
+        if (f.mimeType === 'application/vnd.google-apps.shortcut') {
+          if (!f.shortcutDetails?.targetId) continue
+          id = f.shortcutDetails.targetId
+          mime = f.shortcutDetails.targetMimeType ?? 'application/octet-stream'
+        }
+
+        if (mime === 'application/vnd.google-apps.folder') {
           subfolders.push(f.name)
           continue
         }
         files.push({
-          driveFileId: f.id,
+          driveFileId: id,
           fileName: f.name,
           suggestedTitle: fileNameToTitle(f.name),
-          type: mimeToContentType(f.mimeType),
+          type: mimeToContentType(mime),
         })
       }
 
