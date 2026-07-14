@@ -48,7 +48,7 @@ function emailLayout(content: string) {
           <!-- Header con logo -->
           <tr>
             <td style="padding-bottom:24px;text-align:center;">
-              <img src="${SITE_URL}/logo.svg" alt="WARA GPS" height="36" style="height:36px;width:auto;display:inline-block;">
+              <img src="${SITE_URL}/logo-email.png" alt="WARA" height="36" style="height:36px;width:auto;display:inline-block;">
             </td>
           </tr>
 
@@ -82,7 +82,7 @@ export async function notifyAdminsNewUser(fullName: string, email: string) {
   const adminEmails = await getAdminEmails()
   if (!adminEmails.length) return
 
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: FROM,
     to: adminEmails,
     subject: 'Nuevo registro pendiente — Academia WARA GPS',
@@ -109,12 +109,14 @@ export async function notifyAdminsNewUser(fullName: string, email: string) {
       </a>
     `),
   })
+  if (error) console.error('notifyAdminsNewUser: Resend rechazó el envío:', error)
 }
 
 // ── Email de aprobación al usuario ────────────────────────────────────────────
 
-export async function sendApprovalEmail(toEmail: string, fullName: string) {
-  await resend.emails.send({
+/** Devuelve true si Resend aceptó el envío */
+export async function sendApprovalEmail(toEmail: string, fullName: string): Promise<boolean> {
+  const { error } = await resend.emails.send({
     from: FROM,
     to: toEmail,
     subject: '¡Tu acceso a Academia WARA GPS fue aprobado!',
@@ -130,12 +132,18 @@ export async function sendApprovalEmail(toEmail: string, fullName: string) {
       </a>
     `),
   })
+  if (error) {
+    console.error('sendApprovalEmail: Resend rechazó el envío:', error)
+    return false
+  }
+  return true
 }
 
 // ── Email de rechazo al usuario ───────────────────────────────────────────────
 
-export async function sendRejectionEmail(toEmail: string, fullName: string) {
-  await resend.emails.send({
+/** Devuelve true si Resend aceptó el envío */
+export async function sendRejectionEmail(toEmail: string, fullName: string): Promise<boolean> {
+  const { error } = await resend.emails.send({
     from: FROM,
     to: toEmail,
     subject: 'Tu solicitud en Academia WARA GPS',
@@ -150,4 +158,9 @@ export async function sendRejectionEmail(toEmail: string, fullName: string) {
       </p>
     `),
   })
+  if (error) {
+    console.error('sendRejectionEmail: Resend rechazó el envío:', error)
+    return false
+  }
+  return true
 }

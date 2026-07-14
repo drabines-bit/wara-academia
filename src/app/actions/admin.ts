@@ -25,7 +25,12 @@ async function assertAdmin() {
 
 // ── Usuarios ──────────────────────────────────────────────────────────────────
 
-export async function approveUser(formData: FormData) {
+export type UserActionResult = {
+  emailSent: boolean
+  email: string | null
+}
+
+export async function approveUser(formData: FormData): Promise<UserActionResult> {
   const { supabase } = await assertAdmin()
   const id = formData.get('id') as string
 
@@ -58,14 +63,20 @@ export async function approveUser(formData: FormData) {
   const { data: profile } = await supabase
     .from('profiles').select('full_name').eq('id', id).single()
 
-  if (data.user?.email && profile?.full_name) {
-    sendApprovalEmail(data.user.email, profile.full_name).catch(console.error)
+  let emailSent = false
+  const email = data.user?.email ?? null
+  if (email && profile?.full_name) {
+    emailSent = await sendApprovalEmail(email, profile.full_name).catch((e) => {
+      console.error('sendApprovalEmail lanzó:', e)
+      return false
+    })
   }
 
   revalidatePath('/admin/usuarios')
+  return { emailSent, email }
 }
 
-export async function rejectUser(formData: FormData) {
+export async function rejectUser(formData: FormData): Promise<UserActionResult> {
   const { supabase } = await assertAdmin()
   const id = formData.get('id') as string
 
@@ -77,11 +88,17 @@ export async function rejectUser(formData: FormData) {
   const { data: profile } = await supabase
     .from('profiles').select('full_name').eq('id', id).single()
 
-  if (data.user?.email && profile?.full_name) {
-    sendRejectionEmail(data.user.email, profile.full_name).catch(console.error)
+  let emailSent = false
+  const email = data.user?.email ?? null
+  if (email && profile?.full_name) {
+    emailSent = await sendRejectionEmail(email, profile.full_name).catch((e) => {
+      console.error('sendRejectionEmail lanzó:', e)
+      return false
+    })
   }
 
   revalidatePath('/admin/usuarios')
+  return { emailSent, email }
 }
 
 export async function changeUserRole(formData: FormData) {

@@ -1,9 +1,17 @@
 'use client'
 
 import { useTransition, useState } from 'react'
-import { approveUser, rejectUser, changeUserRole, deleteUser } from '@/app/actions/admin'
+import {
+  approveUser,
+  rejectUser,
+  changeUserRole,
+  deleteUser,
+  type UserActionResult,
+} from '@/app/actions/admin'
 import { Button } from '@/components/ui/button'
 import type { UserRole, UserStatus } from '@/types/database'
+
+type EmailNotice = { ok: boolean; text: string }
 
 export function UserActions({
   id,
@@ -16,6 +24,7 @@ export function UserActions({
 }) {
   const [isPending, startTransition] = useTransition()
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [notice, setNotice] = useState<EmailNotice | null>(null)
 
   const run = (action: (fd: FormData) => Promise<void>, extra?: Record<string, string>) =>
     startTransition(async () => {
@@ -25,14 +34,34 @@ export function UserActions({
       await action(fd)
     })
 
+  const runWithEmail = (
+    action: (fd: FormData) => Promise<UserActionResult>,
+    verb: string
+  ) =>
+    startTransition(async () => {
+      setNotice(null)
+      const fd = new FormData()
+      fd.append('id', id)
+      const result = await action(fd)
+      if (result.emailSent) {
+        setNotice({ ok: true, text: `${verb} y notificado por email a ${result.email}.` })
+      } else {
+        setNotice({
+          ok: false,
+          text: `${verb}, pero el email de aviso NO se pudo enviar. Revisá la configuración de Resend (dominio verificado y RESEND_API_KEY en Vercel).`,
+        })
+      }
+    })
+
   return (
+    <div className="flex flex-col items-start gap-2">
     <div className="flex flex-wrap gap-2">
       {status === 'pending' && (
         <>
           <Button
             variant="primary"
             loading={isPending}
-            onClick={() => run(approveUser)}
+            onClick={() => runWithEmail(approveUser, 'Usuario aprobado')}
             className="text-xs py-1.5 px-3"
           >
             Aprobar
@@ -40,7 +69,7 @@ export function UserActions({
           <Button
             variant="danger"
             loading={isPending}
-            onClick={() => run(rejectUser)}
+            onClick={() => runWithEmail(rejectUser, 'Usuario rechazado')}
             className="text-xs py-1.5 px-3"
           >
             Rechazar
@@ -51,7 +80,7 @@ export function UserActions({
         <Button
           variant="danger"
           loading={isPending}
-          onClick={() => run(rejectUser)}
+          onClick={() => runWithEmail(rejectUser, 'Acceso revocado')}
           className="text-xs py-1.5 px-3"
         >
           Revocar
@@ -61,7 +90,7 @@ export function UserActions({
         <Button
           variant="ghost"
           loading={isPending}
-          onClick={() => run(approveUser)}
+          onClick={() => runWithEmail(approveUser, 'Usuario aprobado')}
           className="text-xs py-1.5 px-3"
         >
           Aprobar
@@ -104,6 +133,21 @@ export function UserActions({
           Eliminar
         </button>
       )}
+    </div>
+
+    {notice && (
+      <p
+        role="status"
+        className={[
+          'rounded-lg border px-3 py-1.5 text-xs',
+          notice.ok
+            ? 'border-[var(--success)]/30 bg-[var(--success)]/10 text-[var(--success)]'
+            : 'border-[var(--warning)]/40 bg-[var(--warning)]/10 text-[var(--warning)]',
+        ].join(' ')}
+      >
+        {notice.ok ? '✓' : '⚠'} {notice.text}
+      </p>
+    )}
     </div>
   )
 }
