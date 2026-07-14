@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { CertificateButton } from '@/components/alumno/CertificateButton'
 import type { ComplexityLevel, Content } from '@/types/database'
 
 export const dynamic = 'force-dynamic'
@@ -150,6 +151,11 @@ export default async function ProductoPage({
               }}
             />
           </div>
+          {progressPct === 100 && (
+            <div className="mt-1 flex justify-end">
+              <CertificateButton productId={product.id} />
+            </div>
+          )}
         </div>
       )}
 
@@ -188,7 +194,35 @@ export default async function ProductoPage({
       </div>
 
       {/* Lista de contenidos */}
-      {activeContents.length === 0 ? (
+      {totalContents === 0 ? (
+        <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] px-6 py-14 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent)]/10">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className="text-[var(--accent)]"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+          </div>
+          <p className="font-medium text-[var(--text-primary)]">
+            Estamos creando el contenido de este curso
+          </p>
+          <p className="mx-auto mt-1 max-w-sm text-sm text-[var(--text-muted)]">
+            Nuestro equipo está preparando el material. Te vamos a avisar
+            apenas esté disponible.
+          </p>
+        </div>
+      ) : activeContents.length === 0 ? (
         <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] py-12 text-center">
           <p className="text-sm text-[var(--text-muted)]">
             Todavía no hay contenido {LEVEL_LABEL[activeLevel].toLowerCase()} para este curso.

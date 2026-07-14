@@ -120,7 +120,32 @@ export function ProductGrid({
                 </div>
               )}
 
+              {/* Curso en preparación */}
+              {total === 0 && (
+                <p className="mt-4 flex items-start gap-2 rounded-lg bg-[var(--bg-card)] px-3 py-2.5 text-xs leading-relaxed text-[var(--text-secondary)]">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                    className="mt-0.5 shrink-0 text-[var(--accent)]"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  Estamos creando el contenido de este curso. Te vamos a avisar
+                  apenas esté disponible.
+                </p>
+              )}
+
               {/* CTA */}
+              {total > 0 && (
               <span className="mt-4 inline-flex items-center gap-1 text-xs font-medium text-[var(--accent)]">
                 Ver contenido
                 <svg
@@ -138,6 +163,7 @@ export function ProductGrid({
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </span>
+              )}
             </Link>
           </motion.div>
         )

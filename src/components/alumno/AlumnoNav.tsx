@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/app/actions/auth'
 import { useTransition } from 'react'
+import { NotificationsBell } from '@/components/alumno/NotificationsBell'
 
 export function AlumnoNav() {
   const pathname = usePathname()
@@ -45,13 +46,16 @@ export function AlumnoNav() {
             ))}
           </nav>
 
-          <button
-            onClick={() => startTransition(() => signOut())}
-            disabled={isPending}
-            className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors disabled:opacity-50"
-          >
-            {isPending ? '...' : 'Salir'}
-          </button>
+          <div className="flex items-center gap-2">
+            <NotificationsBell />
+            <button
+              onClick={() => startTransition(() => signOut())}
+              disabled={isPending}
+              className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors disabled:opacity-50"
+            >
+              {isPending ? '...' : 'Salir'}
+            </button>
+          </div>
         </div>
       </header>
 

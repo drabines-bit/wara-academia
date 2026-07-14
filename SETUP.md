@@ -193,3 +193,60 @@ Requisito de Drive: las carpetas a escanear deben estar compartidas como
 **"Cualquier persona con el enlace"** (los archivos heredan el permiso de la
 carpeta). Las subcarpetas no se escanean recursivamente: escanear cada una
 por separado.
+
+## 8. Notificaciones y certificados
+
+Ejecutar en el **SQL Editor de Supabase** para habilitar el módulo de
+notificaciones y el certificado de finalización:
+
+```sql
+-- ── Notificaciones ────────────────────────────────────────────────────────────
+create table if not exists notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  title text not null,
+  body text,
+  href text,
+  product_id uuid references products(id) on delete set null,
+  kind text not null default 'admin' check (kind in ('nuevo_contenido', 'admin')),
+  created_at timestamptz not null default now(),
+  read_at timestamptz
+);
+
+create index if not exists notifications_user_created
+  on notifications (user_id, created_at desc);
+
+alter table notifications enable row level security;
+
+-- Cada usuario lee y actualiza (marca como leídas) solo las suyas.
+-- Los inserts se hacen desde el servidor con service_role (sin política de insert).
+create policy "read own notifications" on notifications
+  for select using (auth.uid() = user_id);
+create policy "update own notifications" on notifications
+  for update using (auth.uid() = user_id);
+
+-- ── Configuración del certificado (fila única) ────────────────────────────────
+create table if not exists certificate_settings (
+  id boolean primary key default true check (id),
+  disertante_name text not null default '',
+  disertante_title text not null default 'Disertante',
+  presidente_name text not null default '',
+  presidente_title text not null default 'Presidente',
+  disertante_signature_url text,
+  presidente_signature_url text,
+  updated_at timestamptz not null default now()
+);
+
+alter table certificate_settings enable row level security;
+
+create policy "authenticated read certificate settings" on certificate_settings
+  for select using (auth.role() = 'authenticated');
+-- Escrituras solo desde el servidor con service_role (sin política de write).
+
+insert into certificate_settings (id) values (true) on conflict do nothing;
+
+-- ── Bucket público para las imágenes de firma ─────────────────────────────────
+insert into storage.buckets (id, name, public)
+values ('certificados', 'certificados', true)
+on conflict do nothing;
+```

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { sendApprovalEmail, sendRejectionEmail } from '@/lib/email'
+import { getEligibleUserIds, notifyNewContent } from '@/lib/notifications'
 import { slugify } from '@/lib/utils'
 import type { ComplexityLevel, ContentType, UserRole, UserStatus } from '@/types/database'
 
@@ -289,6 +290,8 @@ export async function createContent(
   })
   if (error) return { error: error.message }
 
+  await notifyNewContent(product_id, 1, title)
+
   revalidatePath('/admin/contenidos')
   redirect('/admin/contenidos')
 }
@@ -326,6 +329,141 @@ export async function deleteContent(formData: FormData) {
   const id = formData.get('id') as string
   await supabase.from('contents').delete().eq('id', id)
   revalidatePath('/admin/contenidos')
+}
+
+// ── Plantilla de certificado ──────────────────────────────────────────────────
+
+const MAX_SIGNATURE_BYTES = 1024 * 1024 // 1 MB
+
+async function uploadSignature(file: File, name: string): Promise<string> {
+  if (file.type !== 'image/png') {
+    throw new Error('Las firmas deben ser PNG (idealmente con fondo transparente).')
+  }
+  if (file.size > MAX_SIGNATURE_BYTES) {
+    throw new Error('La imagen de firma no puede superar 1 MB.')
+  }
+
+  const service = createServiceClient()
+  const path = `firmas/${name}.png`
+  const { error } = await service.storage
+    .from('certificados')
+    .upload(path, file, { contentType: 'image/png', upsert: true })
+  if (error) throw new Error(`No se pudo subir la firma: ${error.message}`)
+
+  const { data } = service.storage.from('certificados').getPublicUrl(path)
+  // Cache-buster: el path es fijo, la URL debe cambiar al reemplazar la imagen
+  return `${data.publicUrl}?v=${Date.now()}`
+}
+
+export type CertificateSettingsState =
+  | { error?: string; success?: boolean }
+  | undefined
+
+export async function updateCertificateSettings(
+  _prevState: CertificateSettingsState,
+  formData: FormData
+): Promise<CertificateSettingsState> {
+  await assertAdmin()
+
+  const disertante_name = (formData.get('disertante_name') as string)?.trim()
+  const disertante_title = (formData.get('disertante_title') as string)?.trim() || 'Disertante'
+  const presidente_name = (formData.get('presidente_name') as string)?.trim()
+  const presidente_title = (formData.get('presidente_title') as string)?.trim() || 'Presidente'
+
+  if (!disertante_name || !presidente_name) {
+    return { error: 'Los nombres del disertante y del presidente son requeridos.' }
+  }
+
+  const service = createServiceClient()
+
+  const patch: Record<string, string> = {
+    disertante_name,
+    disertante_title,
+    presidente_name,
+    presidente_title,
+    updated_at: new Date().toISOString(),
+  }
+
+  try {
+    const disertanteFile = formData.get('disertante_signature') as File | null
+    if (disertanteFile && disertanteFile.size > 0) {
+      patch.disertante_signature_url = await uploadSignature(disertanteFile, 'disertante')
+    }
+    const presidenteFile = formData.get('presidente_signature') as File | null
+    if (presidenteFile && presidenteFile.size > 0) {
+      patch.presidente_signature_url = await uploadSignature(presidenteFile, 'presidente')
+    }
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : 'Error subiendo la firma.' }
+  }
+
+  const { error } = await service
+    .from('certificate_settings')
+    .upsert({ id: true, ...patch })
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/certificado')
+  return { success: true }
+}
+
+// ── Notificaciones manuales ───────────────────────────────────────────────────
+
+export type SendNotificationState =
+  | { error?: string; sent?: number }
+  | undefined
+
+export async function sendCourseNotification(
+  _prevState: SendNotificationState,
+  formData: FormData
+): Promise<SendNotificationState> {
+  await assertAdmin()
+
+  const productId = (formData.get('product_id') as string) || ''
+  const title = (formData.get('title') as string)?.trim()
+  const body = (formData.get('body') as string)?.trim() || null
+
+  if (!title) return { error: 'El título es requerido.' }
+  if (title.length > 120) return { error: 'El título no puede superar los 120 caracteres.' }
+
+  const service = createServiceClient()
+
+  let targets: string[] = []
+  let href = '/contenido'
+
+  if (productId) {
+    const { data: product } = await service
+      .from('products')
+      .select('slug')
+      .eq('id', productId)
+      .single()
+    if (!product) return { error: 'El curso seleccionado no existe.' }
+    href = `/contenido/${product.slug}`
+    targets = await getEligibleUserIds(productId)
+  } else {
+    const { data: approved } = await service
+      .from('profiles')
+      .select('id')
+      .eq('status', 'approved')
+    targets = (approved ?? []).map((p) => p.id)
+  }
+
+  if (targets.length === 0) {
+    return { error: 'No hay alumnos con acceso a ese curso para notificar.' }
+  }
+
+  const { error } = await service.from('notifications').insert(
+    targets.map((user_id) => ({
+      user_id,
+      title,
+      body,
+      href,
+      product_id: productId || null,
+      kind: 'admin' as const,
+    }))
+  )
+  if (error) return { error: error.message }
+
+  return { sent: targets.length }
 }
 
 // ── Importador masivo de contenidos ───────────────────────────────────────────
@@ -558,6 +696,8 @@ export async function bulkCreateContents(
   )
 
   if (error) return { created: 0, skipped, error: error.message }
+
+  await notifyNewContent(product_id, valid.length, valid[0]?.title)
 
   revalidatePath('/admin/contenidos')
   revalidatePath('/contenido', 'layout')

@@ -83,6 +83,18 @@ export default async function AdminPage() {
         >
           + Nuevo contenido
         </Link>
+        <Link
+          href="/admin/notificaciones"
+          className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          🔔 Enviar notificación
+        </Link>
+        <Link
+          href="/admin/certificado"
+          className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
+        >
+          🎓 Plantilla de certificado
+        </Link>
       </div>
     </div>
   )

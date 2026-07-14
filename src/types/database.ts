@@ -2,6 +2,7 @@ export type UserRole = 'admin' | 'alumno'
 export type UserStatus = 'pending' | 'approved' | 'rejected'
 export type ComplexityLevel = 'basico' | 'intermedio' | 'avanzado'
 export type ContentType = 'video' | 'pdf' | 'audio' | 'otro'
+export type NotificationKind = 'nuevo_contenido' | 'admin'
 
 export interface Database {
   public: {
@@ -211,6 +212,90 @@ export interface Database {
           },
         ]
       }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          body: string | null
+          href: string | null
+          product_id: string | null
+          kind: NotificationKind
+          created_at: string
+          read_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          body?: string | null
+          href?: string | null
+          product_id?: string | null
+          kind?: NotificationKind
+          created_at?: string
+          read_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          body?: string | null
+          href?: string | null
+          product_id?: string | null
+          kind?: NotificationKind
+          created_at?: string
+          read_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'notifications_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'notifications_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      certificate_settings: {
+        Row: {
+          id: boolean
+          disertante_name: string
+          disertante_title: string
+          presidente_name: string
+          presidente_title: string
+          disertante_signature_url: string | null
+          presidente_signature_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          disertante_name?: string
+          disertante_title?: string
+          presidente_name?: string
+          presidente_title?: string
+          disertante_signature_url?: string | null
+          presidente_signature_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          disertante_name?: string
+          disertante_title?: string
+          presidente_name?: string
+          presidente_title?: string
+          disertante_signature_url?: string | null
+          presidente_signature_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -239,3 +324,5 @@ export type UserContentProgress = Database['public']['Tables']['user_content_pro
 export type Category = Database['public']['Tables']['categories']['Row']
 export type Product = Database['public']['Tables']['products']['Row']
 export type Content = Database['public']['Tables']['contents']['Row']
+export type Notification = Database['public']['Tables']['notifications']['Row']
+export type CertificateSettings = Database['public']['Tables']['certificate_settings']['Row']
