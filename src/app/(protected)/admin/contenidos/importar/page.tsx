@@ -29,7 +29,10 @@ export default async function ImportarContenidosPage() {
           Cargá varios contenidos de una vez pegando links de Google Drive o filas de una planilla.
         </p>
       </div>
-      <BulkImportForm products={products ?? []} />
+      <BulkImportForm
+        products={products ?? []}
+        driveApiEnabled={!!process.env.GOOGLE_DRIVE_API_KEY}
+      />
     </div>
   )
 }

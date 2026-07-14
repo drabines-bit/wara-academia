@@ -165,3 +165,31 @@ Variables de entorno a cargar en el dashboard de Vercel (mismas que `.env.local`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `RESEND_API_KEY`
 - `NEXT_PUBLIC_SITE_URL`
+- `GOOGLE_DRIVE_API_KEY` (opcional, ver sección siguiente)
+
+## 7. API key de Google Drive (opcional)
+
+Habilita el modo "Carpeta de Drive" del importador masivo de contenidos
+(`/admin/contenidos/importar`): pegás la URL de una carpeta y la app lista los
+archivos, detecta el tipo por MIME y prellena los títulos.
+
+**No requiere ser administrador de Google Workspace** — cualquier cuenta de
+Google sirve, porque la API key solo lee archivos públicos ("cualquier persona
+con el enlace"), que es como ya se comparten los contenidos para el embed.
+
+1. Entrar a [console.cloud.google.com](https://console.cloud.google.com) con
+   cualquier cuenta de Google.
+2. Crear un proyecto (ej: `academia-wara`). Si la organización bloquea la
+   creación de proyectos, usar una cuenta de Gmail personal — funciona igual.
+3. **APIs y servicios → Biblioteca** → buscar **Google Drive API** → Habilitar.
+4. **APIs y servicios → Credenciales → Crear credenciales → Clave de API.**
+5. Restringir la clave (recomendado): en "Restricciones de API" seleccionar
+   solo **Google Drive API**. No aplicar restricción de IP (Vercel usa IPs
+   dinámicas).
+6. Copiar la clave en `.env.local` y en Vercel como `GOOGLE_DRIVE_API_KEY`,
+   y redeployar.
+
+Requisito de Drive: las carpetas a escanear deben estar compartidas como
+**"Cualquier persona con el enlace"** (los archivos heredan el permiso de la
+carpeta). Las subcarpetas no se escanean recursivamente: escanear cada una
+por separado.

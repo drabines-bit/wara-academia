@@ -347,6 +347,123 @@ export type BulkImportResult = {
   error?: string
 }
 
+export type DriveScanFile = {
+  driveFileId: string
+  fileName: string
+  suggestedTitle: string
+  type: ContentType
+}
+
+export type DriveScanResult = {
+  files: DriveScanFile[]
+  subfolders: string[]
+  error?: string
+}
+
+function mimeToContentType(mime: string): ContentType {
+  if (mime.startsWith('video/')) return 'video'
+  if (mime === 'application/pdf') return 'pdf'
+  if (mime.startsWith('audio/')) return 'audio'
+  return 'otro'
+}
+
+/** "instalacion-basica_v2.mp4" → "Instalacion basica v2" */
+function fileNameToTitle(name: string): string {
+  const base = name.replace(/\.[a-zA-Z0-9]{2,5}$/, '')
+  const clean = base.replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim()
+  return clean ? clean[0].toUpperCase() + clean.slice(1) : name
+}
+
+/** Lista los archivos de una carpeta pública de Google Drive vía Drive API v3 */
+export async function scanDriveFolder(folderUrl: string): Promise<DriveScanResult> {
+  await assertAdmin()
+
+  const apiKey = process.env.GOOGLE_DRIVE_API_KEY
+  if (!apiKey) {
+    return {
+      files: [],
+      subfolders: [],
+      error:
+        'Falta configurar la variable GOOGLE_DRIVE_API_KEY. Ver SETUP.md para crear la API key de Google Cloud.',
+    }
+  }
+
+  const trimmed = folderUrl.trim()
+  const folderId =
+    trimmed.match(/\/folders\/([a-zA-Z0-9_-]+)/)?.[1] ??
+    trimmed.match(/[?&]id=([a-zA-Z0-9_-]+)/)?.[1] ??
+    (/^[a-zA-Z0-9_-]{20,}$/.test(trimmed) ? trimmed : null)
+
+  if (!folderId) {
+    return { files: [], subfolders: [], error: 'No parece una URL de carpeta de Drive válida.' }
+  }
+
+  const files: DriveScanFile[] = []
+  const subfolders: string[] = []
+  let pageToken: string | undefined
+
+  try {
+    do {
+      const params = new URLSearchParams({
+        q: `'${folderId}' in parents and trashed = false`,
+        fields: 'nextPageToken, files(id, name, mimeType)',
+        pageSize: '100',
+        orderBy: 'name',
+        key: apiKey,
+      })
+      if (pageToken) params.set('pageToken', pageToken)
+
+      const res = await fetch(`https://www.googleapis.com/drive/v3/files?${params}`, {
+        cache: 'no-store',
+      })
+
+      if (!res.ok) {
+        if (res.status === 403 || res.status === 404) {
+          return {
+            files: [],
+            subfolders: [],
+            error:
+              'No se pudo acceder a la carpeta. Verificá que esté compartida como "Cualquier persona con el enlace" y que la API key tenga habilitada la Google Drive API.',
+          }
+        }
+        return { files: [], subfolders: [], error: `Error de Drive API (${res.status}).` }
+      }
+
+      const json = (await res.json()) as {
+        nextPageToken?: string
+        files?: { id: string; name: string; mimeType: string }[]
+      }
+
+      for (const f of json.files ?? []) {
+        if (f.mimeType === 'application/vnd.google-apps.folder') {
+          subfolders.push(f.name)
+          continue
+        }
+        files.push({
+          driveFileId: f.id,
+          fileName: f.name,
+          suggestedTitle: fileNameToTitle(f.name),
+          type: mimeToContentType(f.mimeType),
+        })
+      }
+
+      pageToken = json.nextPageToken
+    } while (pageToken && files.length < 200)
+  } catch {
+    return { files: [], subfolders: [], error: 'No se pudo conectar con la API de Google Drive.' }
+  }
+
+  if (files.length === 0 && subfolders.length === 0) {
+    return {
+      files: [],
+      subfolders: [],
+      error: 'La carpeta está vacía o sus archivos no son visibles con esta API key.',
+    }
+  }
+
+  return { files, subfolders }
+}
+
 /** Devuelve los drive_file_id que ya existen como contenido (para marcar duplicados en la vista previa) */
 export async function findExistingDriveIds(driveIds: string[]): Promise<string[]> {
   const { supabase } = await assertAdmin()

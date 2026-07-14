@@ -5,6 +5,7 @@ import Link from 'next/link'
 import {
   findExistingDriveIds,
   bulkCreateContents,
+  scanDriveFolder,
   type BulkImportResult,
 } from '@/app/actions/admin'
 import { Button } from '@/components/ui/button'
@@ -71,12 +72,21 @@ function parseType(raw: string | undefined, fallback: ContentType): ContentType 
   return fallback
 }
 
-export function BulkImportForm({ products }: { products: Product[] }) {
+export function BulkImportForm({
+  products,
+  driveApiEnabled,
+}: {
+  products: Product[]
+  driveApiEnabled: boolean
+}) {
   const [step, setStep] = useState<'paste' | 'preview' | 'done'>('paste')
+  const [mode, setMode] = useState<'links' | 'folder'>('links')
   const [productId, setProductId] = useState('')
   const [defaultLevel, setDefaultLevel] = useState<ComplexityLevel>('basico')
   const [defaultType, setDefaultType] = useState<ContentType>('video')
   const [rawText, setRawText] = useState('')
+  const [folderUrl, setFolderUrl] = useState('')
+  const [subfolders, setSubfolders] = useState<string[]>([])
   const [rows, setRows] = useState<ParsedRow[]>([])
   const [invalidLines, setInvalidLines] = useState<string[]>([])
   const [result, setResult] = useState<BulkImportResult | null>(null)
@@ -138,6 +148,36 @@ export function BulkImportForm({ products }: { products: Product[] }) {
     })
   }
 
+  function analyzeFolder() {
+    setError('')
+    if (!productId) { setError('Seleccioná el curso de destino.'); return }
+    if (!folderUrl.trim()) { setError('Pegá la URL de la carpeta de Drive.'); return }
+
+    startTransition(async () => {
+      const scan = await scanDriveFolder(folderUrl)
+      if (scan.error) { setError(scan.error); return }
+
+      const existing = await findExistingDriveIds(scan.files.map((f) => f.driveFileId))
+      const existingSet = new Set(existing)
+
+      setRows(
+        scan.files.map((f, i) => ({
+          key: i,
+          title: f.suggestedTitle,
+          description: '',
+          complexity: defaultLevel,
+          type: f.type,
+          driveFileId: f.driveFileId,
+          rawLine: f.fileName,
+          problem: existingSet.has(f.driveFileId) ? ('duplicado' as const) : null,
+        }))
+      )
+      setSubfolders(scan.subfolders)
+      setInvalidLines([])
+      setStep('preview')
+    })
+  }
+
   function updateRow(key: number, patch: Partial<ParsedRow>) {
     setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)))
   }
@@ -172,6 +212,8 @@ export function BulkImportForm({ products }: { products: Product[] }) {
   function reset() {
     setStep('paste')
     setRawText('')
+    setFolderUrl('')
+    setSubfolders([])
     setRows([])
     setInvalidLines([])
     setResult(null)
@@ -241,6 +283,14 @@ export function BulkImportForm({ products }: { products: Product[] }) {
             <span className="text-[var(--danger)]">{invalidLines.length} línea{invalidLines.length === 1 ? '' : 's'} sin link válido</span>
           )}
         </div>
+
+        {subfolders.length > 0 && (
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] px-3 py-2 text-xs text-[var(--text-muted)]">
+            La carpeta contiene subcarpetas que no se escanean:{' '}
+            <span className="text-[var(--text-secondary)]">{subfolders.join(', ')}</span>.
+            Escanealas por separado si tienen contenido.
+          </div>
+        )}
 
         <div className="flex flex-col gap-2">
           {rows.map((row) => (
@@ -342,9 +392,32 @@ export function BulkImportForm({ products }: { products: Product[] }) {
     )
   }
 
-  // ── Paso 1: pegar ────────────────────────────────────────────────────────────
+  // ── Paso 1: pegar / escanear carpeta ─────────────────────────────────────────
   return (
     <div className="flex max-w-2xl flex-col gap-5">
+      {/* Selector de modo */}
+      <div className="flex gap-1 rounded-lg border border-[var(--border)] bg-[var(--bg-surface)] p-1 self-start">
+        {(
+          [
+            { id: 'links', label: 'Pegar links' },
+            { id: 'folder', label: 'Carpeta de Drive' },
+          ] as const
+        ).map((m) => (
+          <button
+            key={m.id}
+            onClick={() => { setMode(m.id); setError('') }}
+            className={[
+              'rounded-md px-3.5 py-1.5 text-sm transition-colors',
+              mode === m.id
+                ? 'bg-[var(--bg-card)] font-medium text-[var(--text-primary)]'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]',
+            ].join(' ')}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium text-[var(--text-secondary)]">Curso de destino</label>
@@ -371,44 +444,81 @@ export function BulkImportForm({ products }: { products: Product[] }) {
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-[var(--text-secondary)]">Tipo por defecto</label>
-          <select
-            value={defaultType}
-            onChange={(e) => setDefaultType(e.target.value as ContentType)}
-            className={SELECT_CLASS}
-          >
-            {TYPES.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
-          </select>
-        </div>
+        {mode === 'links' && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-[var(--text-secondary)]">Tipo por defecto</label>
+            <select
+              value={defaultType}
+              onChange={(e) => setDefaultType(e.target.value as ContentType)}
+              className={SELECT_CLASS}
+            >
+              {TYPES.map((t) => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-[var(--text-secondary)]">
-          Links de Google Drive
-        </label>
-        <textarea
-          value={rawText}
-          onChange={(e) => setRawText(e.target.value)}
-          rows={10}
-          placeholder={
-            'Un link por línea:\nhttps://drive.google.com/file/d/ABC123…/view\nhttps://drive.google.com/file/d/DEF456…/view\n\nO pegá filas desde Excel/Sheets con columnas:\nTítulo ⇥ Link ⇥ Nivel ⇥ Tipo ⇥ Descripción'
-          }
-          className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3.5 py-2.5 font-mono text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline focus:outline-2 focus:outline-[var(--accent)]"
-        />
-        <p className="text-xs text-[var(--text-muted)]">
-          Acepta links de Drive, IDs sueltos, o filas copiadas de una planilla (con tabulaciones).
-          El nivel y tipo por defecto se aplican a las líneas que no los especifiquen; después podés ajustar cada fila.
-        </p>
-      </div>
+      {mode === 'links' ? (
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-[var(--text-secondary)]">
+            Links de Google Drive
+          </label>
+          <textarea
+            value={rawText}
+            onChange={(e) => setRawText(e.target.value)}
+            rows={10}
+            placeholder={
+              'Un link por línea:\nhttps://drive.google.com/file/d/ABC123…/view\nhttps://drive.google.com/file/d/DEF456…/view\n\nO pegá filas desde Excel/Sheets con columnas:\nTítulo ⇥ Link ⇥ Nivel ⇥ Tipo ⇥ Descripción'
+            }
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-3.5 py-2.5 font-mono text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline focus:outline-2 focus:outline-[var(--accent)]"
+          />
+          <p className="text-xs text-[var(--text-muted)]">
+            Acepta links de Drive, IDs sueltos, o filas copiadas de una planilla (con tabulaciones).
+            El nivel y tipo por defecto se aplican a las líneas que no los especifiquen; después podés ajustar cada fila.
+          </p>
+        </div>
+      ) : driveApiEnabled ? (
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-[var(--text-secondary)]">
+            URL de la carpeta de Drive
+          </label>
+          <input
+            type="url"
+            value={folderUrl}
+            onChange={(e) => setFolderUrl(e.target.value)}
+            placeholder="https://drive.google.com/drive/folders/…"
+            className={INPUT_CLASS}
+          />
+          <p className="text-xs text-[var(--text-muted)]">
+            La carpeta debe estar compartida como «Cualquier persona con el enlace».
+            Se detectan automáticamente el tipo (video/PDF/audio) y el título desde el nombre
+            de cada archivo. El nivel por defecto se aplica a todos; después podés ajustar cada fila.
+          </p>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg-surface)] p-6 text-center">
+          <p className="text-sm font-medium text-[var(--text-secondary)]">
+            El escaneo de carpetas no está configurado
+          </p>
+          <p className="mx-auto mt-1 max-w-md text-xs text-[var(--text-muted)]">
+            Requiere una API key de Google Cloud con la Drive API habilitada, cargada como
+            variable de entorno <span className="font-mono">GOOGLE_DRIVE_API_KEY</span>.
+            Las instrucciones están en SETUP.md. Mientras tanto podés usar «Pegar links».
+          </p>
+        </div>
+      )}
 
       {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
 
       <div className="flex gap-3">
-        <Button onClick={analyze} loading={isPending}>
-          Analizar
+        <Button
+          onClick={mode === 'links' ? analyze : analyzeFolder}
+          loading={isPending}
+          disabled={mode === 'folder' && !driveApiEnabled}
+        >
+          {mode === 'links' ? 'Analizar' : 'Escanear carpeta'}
         </Button>
         <a
           href="/admin/contenidos"
