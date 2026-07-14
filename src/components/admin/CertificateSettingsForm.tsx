@@ -129,11 +129,13 @@ export function CertificateSettingsForm({
         <div className="aspect-[297/210] w-full select-none rounded-lg bg-white p-[4%] shadow-lg">
           <div className="flex h-full flex-col items-center border-2 border-[#1a2030] p-[2%]">
             <div className="flex h-full w-full flex-col items-center justify-between border border-[#b91c1c] px-[4%] py-[3%] text-center">
-              <div>
-                <p className="text-[1.4vw] lg:text-[0.65rem] font-bold tracking-[0.3em] text-[#b91c1c]">
-                  ACADEMIA WARA GPS
+              <div className="flex flex-col items-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo.svg" alt="WARA" className="h-[3.5vw] lg:h-6 w-auto" />
+                <p className="mt-[1.5%] text-[1.4vw] lg:text-[0.65rem] font-bold tracking-[0.3em] text-[#b91c1c]">
+                  ACADEMIA WARA
                 </p>
-                <p className="mt-[2%] font-serif text-[3vw] lg:text-[1.35rem] font-bold text-[#1a2030]">
+                <p className="mt-[1.5%] font-serif text-[3vw] lg:text-[1.35rem] font-bold text-[#1a2030]">
                   CERTIFICADO DE FINALIZACIÓN
                 </p>
                 <div className="mx-auto mt-1 h-px w-24 bg-[#b91c1c]" />

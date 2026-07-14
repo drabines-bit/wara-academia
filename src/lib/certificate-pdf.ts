@@ -32,6 +32,44 @@ async function fetchPng(url: string): Promise<ArrayBuffer | null> {
   }
 }
 
+/**
+ * Rasteriza un SVG a PNG usando canvas (solo browser). pdf-lib no soporta
+ * SVG, pero el PDF se genera client-side así que el canvas está disponible.
+ */
+async function rasterizeSvg(url: string, scale = 4): Promise<ArrayBuffer | null> {
+  if (typeof document === 'undefined') return null
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return null
+    const svgText = await res.text()
+    const blob = new Blob([svgText], { type: 'image/svg+xml' })
+    const objUrl = URL.createObjectURL(blob)
+
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image()
+      i.onload = () => resolve(i)
+      i.onerror = () => reject(new Error('svg load'))
+      i.src = objUrl
+    })
+
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.max(1, Math.round(img.width * scale))
+    canvas.height = Math.max(1, Math.round(img.height * scale))
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+    URL.revokeObjectURL(objUrl)
+
+    const pngBlob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/png')
+    )
+    if (!pngBlob) return null
+    return await pngBlob.arrayBuffer()
+  } catch {
+    return null
+  }
+}
+
 export async function generateCertificatePdf(data: CertificateData): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
   const page = doc.addPage([W, H])
@@ -53,40 +91,58 @@ export async function generateCertificatePdf(data: CertificateData): Promise<Uin
   })
 
   // ── Encabezado ─────────────────────────────────────────────────────────────
-  centerText(page, 'A C A D E M I A   W A R A   G P S', H - 92, sansBold, 13, BRAND)
-  centerText(page, 'CERTIFICADO DE FINALIZACIÓN', H - 138, serifBold, 34)
+  // Logo de la empresa (SVG rasterizado en el browser)
+  const logoBytes = await rasterizeSvg('/logo.svg')
+  if (logoBytes) {
+    try {
+      const logo = await doc.embedPng(logoBytes)
+      const logoW = 120
+      const logoH = (logo.height / logo.width) * logoW
+      page.drawImage(logo, {
+        x: (W - logoW) / 2,
+        y: H - 66 - logoH,
+        width: logoW,
+        height: logoH,
+      })
+    } catch {
+      // sin logo: el encabezado de texto alcanza
+    }
+  }
+
+  centerText(page, 'A C A D E M I A   W A R A', H - 122, sansBold, 12, BRAND)
+  centerText(page, 'CERTIFICADO DE FINALIZACIÓN', H - 166, serifBold, 34)
 
   // Regla decorativa
   page.drawLine({
-    start: { x: W / 2 - 110, y: H - 158 },
-    end: { x: W / 2 + 110, y: H - 158 },
+    start: { x: W / 2 - 110, y: H - 186 },
+    end: { x: W / 2 + 110, y: H - 186 },
     thickness: 1,
     color: BRAND,
   })
 
   // ── Cuerpo ─────────────────────────────────────────────────────────────────
-  centerText(page, 'Se certifica que', H - 210, serif, 16, MUTED)
-  centerText(page, data.studentName, H - 252, serifItalic, 34)
+  centerText(page, 'Se certifica que', H - 232, serif, 16, MUTED)
+  centerText(page, data.studentName, H - 272, serifItalic, 34)
 
   // Línea bajo el nombre
   const nameWidth = serifItalic.widthOfTextAtSize(data.studentName, 34)
   const lineHalf = Math.max(nameWidth / 2 + 24, 140)
   page.drawLine({
-    start: { x: W / 2 - lineHalf, y: H - 262 },
-    end: { x: W / 2 + lineHalf, y: H - 262 },
+    start: { x: W / 2 - lineHalf, y: H - 282 },
+    end: { x: W / 2 + lineHalf, y: H - 282 },
     thickness: 0.5,
     color: LINE,
   })
 
-  centerText(page, 'completó satisfactoriamente la capacitación', H - 300, serif, 16, MUTED)
-  centerText(page, data.courseName, H - 336, serifBold, 24)
+  centerText(page, 'completó satisfactoriamente la capacitación', H - 318, serif, 16, MUTED)
+  centerText(page, data.courseName, H - 352, serifBold, 24)
 
   const fecha = new Date(data.issuedAt).toLocaleDateString('es-AR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   })
-  centerText(page, `Emitido el ${fecha}`, H - 372, serif, 12, MUTED)
+  centerText(page, `Emitido el ${fecha}`, H - 386, serif, 12, MUTED)
 
   // ── Firmas ─────────────────────────────────────────────────────────────────
   const SIG_LINE_W = 190
