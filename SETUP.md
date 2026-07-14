@@ -165,7 +165,8 @@ Variables de entorno a cargar en el dashboard de Vercel (mismas que `.env.local`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `RESEND_API_KEY`
 - `NEXT_PUBLIC_SITE_URL`
-- `GOOGLE_DRIVE_API_KEY` (opcional, ver sección siguiente)
+- `GOOGLE_DRIVE_API_KEY` (opcional, ver § 7)
+- `ODOO_URL`, `ODOO_DB`, `ODOO_LOGIN`, `ODOO_API_KEY` (opcionales, ver § 9)
 
 ## 7. API key de Google Drive (opcional)
 
@@ -251,3 +252,35 @@ insert into storage.buckets (id, name, public)
 values ('certificados', 'certificados', true)
 on conflict do nothing;
 ```
+
+## 9. Aprobación automática vía Odoo (opcional)
+
+Al registrarse un usuario, la app consulta los contactos de Odoo
+(`res.partner`): si el email figura ahí, el registro **se aprueba
+automáticamente** (con las categorías por defecto) y los admins reciben un
+email informativo. Si el email no figura, o si Odoo no responde, el registro
+queda pendiente y sigue el circuito de aprobación manual de siempre — la
+integración nunca bloquea un registro.
+
+### Crear la API key en Odoo Online
+
+1. Ingresar a Odoo con el usuario que hará las consultas (alcanza con permisos
+   de lectura sobre Contactos).
+2. Avatar (arriba a la derecha) → **Mi perfil** → pestaña
+   **Seguridad de la cuenta** → sección **Claves API** → **Nueva clave API**.
+3. Ponerle un nombre (ej: `academia-wara`) y copiar la clave (se muestra una
+   sola vez).
+
+### Variables de entorno
+
+Cargar en `.env.local` y en Vercel (y redeployar):
+
+| Variable | Valor |
+|---|---|
+| `ODOO_URL` | URL de la instancia, ej. `https://wara.odoo.com` |
+| `ODOO_DB` | Nombre de la base. En Odoo Online suele ser el subdominio (`wara`); se confirma en Ajustes → Activar modo desarrollador → el nombre aparece en la URL, o en el selector de bases |
+| `ODOO_LOGIN` | Email del usuario de Odoo dueño de la API key |
+| `ODOO_API_KEY` | La clave generada en el paso anterior |
+
+Sin estas variables la integración queda desactivada y todo funciona como
+antes (aprobación 100% manual).

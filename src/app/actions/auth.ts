@@ -2,7 +2,48 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { notifyAdminsNewUser } from '@/lib/email'
+import { createServiceClient } from '@/lib/supabase/service'
+import { notifyAdminsNewUser, notifyAdminsAutoApproved } from '@/lib/email'
+import { isEmailInOdoo } from '@/lib/odoo'
+
+/**
+ * Aprueba el perfil recién creado y le asigna las categorías por defecto.
+ * El perfil lo crea un trigger de la base al registrarse; si todavía no
+ * existe se reintenta una vez antes de dejar el circuito manual.
+ */
+async function autoApproveProfile(userId: string): Promise<boolean> {
+  const service = createServiceClient()
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { data } = await service
+      .from('profiles')
+      .update({ status: 'approved' })
+      .eq('id', userId)
+      .select('id')
+
+    if (data?.length) {
+      const { data: existingCats } = await service
+        .from('user_categories')
+        .select('category_id')
+        .eq('user_id', userId)
+
+      if (!existingCats?.length) {
+        const { data: defaultCats } = await service
+          .from('categories')
+          .select('id')
+          .eq('is_default', true)
+        if (defaultCats?.length) {
+          await service.from('user_categories').insert(
+            defaultCats.map((c) => ({ user_id: userId, category_id: c.id }))
+          )
+        }
+      }
+      return true
+    }
+    await new Promise((r) => setTimeout(r, 700))
+  }
+  return false
+}
 
 // ── Registro ──────────────────────────────────────────────────────────────────
 
@@ -28,7 +69,7 @@ export async function signUp(
   const supabase = await createClient()
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -43,10 +84,22 @@ export async function signUp(
     return { error: error.message }
   }
 
-  // Avisar a los admins del nuevo registro (no bloquea si falla)
-  notifyAdminsNewUser(fullName, email).catch(console.error)
+  // Aprobación automática si el email figura en los contactos de Odoo.
+  // Si Odoo no está configurado, no responde o falla → circuito manual.
+  let autoApproved = false
+  const userId = data.user?.id
+  if (userId && (await isEmailInOdoo(email)) === true) {
+    autoApproved = await autoApproveProfile(userId)
+  }
 
-  redirect('/registro/enviado')
+  // Avisar a los admins (no bloquea si falla)
+  if (autoApproved) {
+    notifyAdminsAutoApproved(fullName, email).catch(console.error)
+  } else {
+    notifyAdminsNewUser(fullName, email).catch(console.error)
+  }
+
+  redirect(autoApproved ? '/registro/enviado?aprobado=1' : '/registro/enviado')
 }
 
 // ── Login ─────────────────────────────────────────────────────────────────────

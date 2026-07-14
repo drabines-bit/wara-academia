@@ -4,7 +4,14 @@ import { AuthCard } from '@/components/auth/AuthCard'
 
 export const metadata: Metadata = { title: 'Revisá tu email' }
 
-export default function RegistroEnviadoPage() {
+export default async function RegistroEnviadoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ aprobado?: string }>
+}) {
+  const { aprobado } = await searchParams
+  const autoAprobado = aprobado === '1'
+
   return (
     <AuthCard title="Revisá tu email">
       <div className="flex flex-col gap-4">
@@ -14,10 +21,17 @@ export default function RegistroEnviadoPage() {
             activar tu cuenta.
           </p>
         </div>
-        <p className="text-sm text-[var(--text-secondary)]">
-          Una vez que confirmes tu email, el equipo WARA GPS revisará tu
-          solicitud y te avisaremos cuando tengas acceso.
-        </p>
+        {autoAprobado ? (
+          <p className="text-sm text-[var(--text-secondary)]">
+            Tu acceso ya está habilitado: apenas confirmes tu email vas a poder
+            ingresar directamente a la Academia.
+          </p>
+        ) : (
+          <p className="text-sm text-[var(--text-secondary)]">
+            Una vez que confirmes tu email, el equipo WARA GPS revisará tu
+            solicitud y te avisaremos cuando tengas acceso.
+          </p>
+        )}
         <p className="text-sm text-[var(--text-muted)]">
           ¿No llegó el email? Revisá la carpeta de spam o{' '}
           <Link

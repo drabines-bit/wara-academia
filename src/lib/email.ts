@@ -112,6 +112,43 @@ export async function notifyAdminsNewUser(fullName: string, email: string) {
   if (error) console.error('notifyAdminsNewUser: Resend rechazó el envío:', error)
 }
 
+// ── Aviso a admins: usuario auto-aprobado vía Odoo ────────────────────────────
+
+export async function notifyAdminsAutoApproved(fullName: string, email: string) {
+  const adminEmails = await getAdminEmails()
+  if (!adminEmails.length) return
+
+  const { error } = await resend.emails.send({
+    from: FROM,
+    to: adminEmails,
+    subject: 'Usuario auto-aprobado vía Odoo — Academia WARA GPS',
+    html: emailLayout(`
+      <h2 style="margin:0 0 16px;font-size:20px;color:#1a2030;">Usuario auto-aprobado ✓</h2>
+      <p style="margin:0 0 16px;color:#4a5568;line-height:1.6;">
+        Este registro se aprobó automáticamente porque su email figura en los
+        contactos de Odoo. No hace falta ninguna acción.
+      </p>
+      <table cellpadding="0" cellspacing="0" style="background:#f1f3f7;border-radius:8px;padding:16px;margin-bottom:24px;width:100%;">
+        <tr>
+          <td style="padding:4px 0;font-size:14px;color:#4a5568;">
+            <strong style="color:#1a2030;">Nombre:</strong>&nbsp;&nbsp;${fullName}
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:4px 0;font-size:14px;color:#4a5568;">
+            <strong style="color:#1a2030;">Email:</strong>&nbsp;&nbsp;${email}
+          </td>
+        </tr>
+      </table>
+      <a href="${SITE_URL}/admin/usuarios"
+         style="display:inline-block;background:#3b82f6;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;">
+        Ver usuarios
+      </a>
+    `),
+  })
+  if (error) console.error('notifyAdminsAutoApproved: Resend rechazó el envío:', error)
+}
+
 // ── Email de aprobación al usuario ────────────────────────────────────────────
 
 /** Devuelve true si Resend aceptó el envío */
