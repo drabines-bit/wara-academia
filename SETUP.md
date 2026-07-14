@@ -196,8 +196,9 @@ por separado.
 
 ## 8. Notificaciones y certificados
 
-Ejecutar en el **SQL Editor de Supabase** para habilitar el módulo de
-notificaciones y el certificado de finalización:
+El script completo está en [`supabase/notificaciones-certificado.sql`](supabase/notificaciones-certificado.sql)
+(es idempotente, se puede correr más de una vez). Copiar su contenido y
+ejecutarlo en **Supabase → SQL Editor → New query → Run**:
 
 ```sql
 -- ── Notificaciones ────────────────────────────────────────────────────────────
