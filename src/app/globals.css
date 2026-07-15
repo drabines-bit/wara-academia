@@ -69,6 +69,16 @@
   --danger: #dc2626;
 }
 
+/* ─── Escala de z-index semántica ────────────────────────────────────────────── */
+:root {
+  --z-dropdown: 20;
+  --z-sticky: 30;
+  --z-modal-backdrop: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+  --z-tooltip: 70;
+}
+
 /* ─── Tokens de Tailwind ─────────────────────────────────────────────────────── */
 @theme inline {
   --color-bg-base: var(--bg-base);
@@ -130,6 +140,10 @@ body {
 .animate-float {
   animation: float 3.5s ease-in-out infinite;
 }
+@keyframes toast-countdown {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
 @keyframes signal-ping {
   0%   { transform: translate(-50%, -50%) scale(0.35); opacity: 0.65; }
   100% { transform: translate(-50%, -50%) scale(1.75); opacity: 0; }
@@ -139,6 +153,42 @@ body {
 input:focus {
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
   transition: box-shadow 0.15s ease;
+}
+
+/* ─── Command palette (native <dialog>, animado con @starting-style) ────────── */
+.cmdk-dialog {
+  margin: 8svh auto auto auto;
+  padding: 0;
+  border: none;
+  border-radius: 14px;
+  background: transparent;
+  overflow: visible;
+  max-width: min(560px, calc(100vw - 2rem));
+  width: 100%;
+  transition: opacity 0.16s cubic-bezier(0.16, 1, 0.3, 1), transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), display 0.16s allow-discrete, overlay 0.16s allow-discrete;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.cmdk-dialog::backdrop {
+  background: rgba(3, 5, 10, 0.55);
+  transition: opacity 0.16s ease;
+  opacity: 1;
+}
+.cmdk-dialog:not([open]) {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.98);
+}
+.cmdk-dialog:not([open])::backdrop {
+  opacity: 0;
+}
+@starting-style {
+  .cmdk-dialog[open] {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  .cmdk-dialog[open]::backdrop {
+    opacity: 0;
+  }
 }
 
 /* ─── Reduced motion ─────────────────────────────────────────────────────────── */

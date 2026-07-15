@@ -1,8 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { deleteProduct } from '@/app/actions/admin'
-import { DeleteButton } from '@/components/admin/DeleteButton'
+import { ProductsTable } from '@/components/admin/ProductsTable'
 
 export const metadata: Metadata = { title: 'Cursos — Admin' }
 
@@ -14,9 +13,7 @@ export default async function ProductosPage() {
     supabase.from('categories').select('id, name'),
   ])
 
-  const categoryMap = Object.fromEntries(
-    (categories ?? []).map((c) => [c.id, c.name])
-  )
+  const categoryMap = Object.fromEntries((categories ?? []).map((c) => [c.id, c.name]))
 
   return (
     <div className="flex flex-col gap-6">
@@ -30,54 +27,7 @@ export default async function ProductosPage() {
         </Link>
       </div>
 
-      {!products?.length ? (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] p-8 text-center">
-          <p className="text-[var(--text-muted)]">No hay cursos todavía.</p>
-          <Link
-            href="/admin/productos/nuevo"
-            className="mt-3 inline-block text-sm text-[var(--accent)] hover:underline"
-          >
-            Crear el primero
-          </Link>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {products.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3"
-            >
-              <div className="min-w-0">
-                <p className="font-medium text-[var(--text-primary)] truncate">
-                  {p.name}
-                  {p.is_mandatory && (
-                    <span className="ml-2 rounded-full bg-[var(--warning)]/15 px-2 py-0.5 text-[10px] font-medium text-[var(--warning)] align-middle">
-                      Obligatorio
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs text-[var(--text-muted)]">
-                  /{p.slug} · orden {p.sort_order}
-                  {p.category_id ? (
-                    <> · <span className="text-[var(--text-secondary)]">{categoryMap[p.category_id] ?? '—'}</span></>
-                  ) : (
-                    <> · <span className="italic">Sin categoría</span></>
-                  )}
-                </p>
-              </div>
-              <div className="flex shrink-0 gap-1">
-                <Link
-                  href={`/admin/productos/${p.id}`}
-                  className="rounded-md px-3 py-1.5 text-xs text-[var(--text-secondary)] hover:bg-[var(--bg-card)] transition-colors"
-                >
-                  Editar
-                </Link>
-                <DeleteButton action={deleteProduct} id={p.id} />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      <ProductsTable products={products ?? []} categoryMap={categoryMap} />
     </div>
   )
 }

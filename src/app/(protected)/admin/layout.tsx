@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { AdminNav } from '@/components/admin/AdminNav'
+import { Toaster } from '@/components/admin/Toaster'
 import { Footer } from '@/components/Footer'
 
 export default async function AdminLayout({
@@ -30,6 +31,7 @@ export default async function AdminLayout({
         {children}
       </main>
       <Footer />
+      <Toaster />
     </div>
   )
 }

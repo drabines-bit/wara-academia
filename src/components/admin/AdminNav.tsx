@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/app/actions/auth'
 import { useTransition } from 'react'
+import { CommandPalette } from '@/components/admin/CommandPalette'
 
 const NAV = [
   { href: '/admin', label: 'Panel', icon: '⊞' },
@@ -24,7 +25,7 @@ export function AdminNav() {
   return (
     <>
       {/* ─── Top bar ─────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-30 border-b border-[var(--border)] bg-[var(--bg-surface)]">
+      <header className="sticky top-0 z-[var(--z-sticky)] border-b border-[var(--border)] bg-[var(--bg-surface)]">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <img src="/logo.svg" alt="WARA GPS" className="h-7 w-auto" />
@@ -54,18 +55,21 @@ export function AdminNav() {
             ))}
           </nav>
 
-          <button
-            onClick={() => startTransition(() => signOut())}
-            disabled={isPending}
-            className="text-sm text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors disabled:opacity-50"
-          >
-            {isPending ? '...' : 'Salir'}
-          </button>
+          <div className="flex items-center gap-3">
+            <CommandPalette />
+            <button
+              onClick={() => startTransition(() => signOut())}
+              disabled={isPending}
+              className="text-sm text-[var(--text-muted)] hover:text-[var(--danger)] transition-colors disabled:opacity-50"
+            >
+              {isPending ? '...' : 'Salir'}
+            </button>
+          </div>
         </div>
       </header>
 
       {/* ─── Mobile bottom nav ───────────────────────────────────────────── */}
-      <nav className="fixed bottom-0 inset-x-0 z-30 border-t border-[var(--border)] bg-[var(--bg-surface)] md:hidden">
+      <nav className="fixed bottom-0 inset-x-0 z-[var(--z-sticky)] border-t border-[var(--border)] bg-[var(--bg-surface)] md:hidden">
         <div className="flex">
           {NAV.map(({ href, label, icon }) => (
             <Link

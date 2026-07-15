@@ -769,3 +769,60 @@ export async function bulkCreateContents(
 
   return { created: valid.length, skipped }
 }
+
+// ── Command palette ──────────────────────────────────────────────────────────
+
+export type AdminSearchItem = {
+  id: string
+  kind: 'user' | 'product' | 'content'
+  title: string
+  subtitle: string
+  href: string
+}
+
+export async function getAdminSearchIndex(): Promise<AdminSearchItem[]> {
+  const { supabase } = await assertAdmin()
+  const service = createServiceClient()
+
+  const [{ data: profiles }, { data: products }, { data: contents }, { data: authUsers }] =
+    await Promise.all([
+      supabase.from('profiles').select('id, full_name, status').order('full_name'),
+      supabase.from('products').select('id, name, slug').order('name'),
+      supabase.from('contents').select('id, title, product_id, products(name)').order('title'),
+      service.auth.admin.listUsers({ perPage: 1000 }),
+    ])
+
+  const emailById = Object.fromEntries((authUsers?.users ?? []).map((u) => [u.id, u.email ?? '']))
+  const STATUS_LABEL: Record<string, string> = {
+    pending: 'Pendiente',
+    approved: 'Aprobado',
+    rejected: 'Rechazado',
+  }
+
+  const userItems: AdminSearchItem[] = (profiles ?? []).map((p) => ({
+    id: p.id,
+    kind: 'user',
+    title: p.full_name || '(sin nombre)',
+    subtitle: `${emailById[p.id] ?? ''} · ${STATUS_LABEL[p.status] ?? p.status}`,
+    href: `/admin/usuarios?highlight=${p.id}`,
+  }))
+
+  const productItems: AdminSearchItem[] = (products ?? []).map((p) => ({
+    id: p.id,
+    kind: 'product',
+    title: p.name,
+    subtitle: `/${p.slug}`,
+    href: `/admin/productos/${p.id}`,
+  }))
+
+  type ContentRow = { id: string; title: string; product_id: string; products: { name: string } | null }
+  const contentItems: AdminSearchItem[] = ((contents ?? []) as ContentRow[]).map((c) => ({
+    id: c.id,
+    kind: 'content',
+    title: c.title,
+    subtitle: c.products?.name ?? '—',
+    href: `/admin/contenidos/${c.id}`,
+  }))
+
+  return [...userItems, ...productItems, ...contentItems]
+}
