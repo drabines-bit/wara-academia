@@ -148,6 +148,31 @@ export async function signOut() {
   redirect('/login')
 }
 
+// ── Reenvío del email de confirmación de registro ─────────────────────────────
+
+export async function resendConfirmationEmail(email: string): Promise<{ ok: boolean; error?: string }> {
+  if (!email) return { ok: false, error: 'Ingresá tu email primero.' }
+
+  const supabase = await createClient()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: { emailRedirectTo: `${siteUrl}/auth/callback` },
+  })
+
+  if (error) {
+    if (error.message.includes('rate limit') || error.message.includes('security purposes'))
+      return { ok: false, error: 'Ya te reenviamos uno hace poco. Esperá un minuto e intentá de nuevo.' }
+    if (error.message.includes('already confirmed'))
+      return { ok: false, error: 'Ese email ya está confirmado. Probá iniciar sesión.' }
+    return { ok: false, error: 'No pudimos reenviar el email. Probá de nuevo en unos minutos.' }
+  }
+
+  return { ok: true }
+}
+
 // ── Reset de contraseña — paso 1: solicitar ───────────────────────────────────
 
 export async function requestPasswordReset(

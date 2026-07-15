@@ -1,14 +1,15 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { AnimatePresence, motion } from 'framer-motion'
-import { signIn } from '@/app/actions/auth'
+import { signIn, resendConfirmationEmail } from '@/app/actions/auth'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { footerConfig } from '@/config/footer'
 
 const SOPORTE_WHATSAPP_MENSAJE = 'Hola, tengo problemas para acceder a la Academia WARA GPS.'
+const ERROR_EMAIL_SIN_CONFIRMAR = 'Confirmá tu email antes de ingresar.'
 
 const banner = {
   initial: { opacity: 0, height: 0, marginBottom: 0 },
@@ -25,6 +26,21 @@ export function LoginForm({
   passwordActualizado?: boolean
 }) {
   const [state, action, isPending] = useActionState(signIn, undefined)
+  const [email, setEmail] = useState('')
+  const [isResending, startResend] = useTransition()
+  const [resendState, setResendState] = useState<{ ok: boolean; text: string } | null>(null)
+
+  function handleResend() {
+    setResendState(null)
+    startResend(async () => {
+      const result = await resendConfirmationEmail(email)
+      setResendState(
+        result.ok
+          ? { ok: true, text: 'Listo, te reenviamos el email de confirmación.' }
+          : { ok: false, text: result.error ?? 'No pudimos reenviar el email.' }
+      )
+    })
+  }
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -52,6 +68,8 @@ export function LoginForm({
         autoComplete="email"
         required
         placeholder="vos@ejemplo.com"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
       />
       <div className="flex flex-col gap-1.5">
         <Input
@@ -72,16 +90,36 @@ export function LoginForm({
 
       <AnimatePresence initial={false}>
         {state?.error && (
-          <motion.p
+          <motion.div
             key="error"
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.18, ease: 'easeOut' }}
-            className="text-sm text-[var(--danger)]"
+            className="flex flex-col gap-2"
           >
-            {state.error}
-          </motion.p>
+            <p className="text-sm text-[var(--danger)]">{state.error}</p>
+
+            {state.error === ERROR_EMAIL_SIN_CONFIRMAR && !resendState && (
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={isResending}
+                className="self-start text-xs font-medium text-[var(--accent)] hover:underline disabled:opacity-50"
+              >
+                {isResending ? 'Reenviando…' : 'Reenviar email de confirmación'}
+              </button>
+            )}
+
+            {resendState && (
+              <p
+                role="status"
+                className={`text-xs ${resendState.ok ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}
+              >
+                {resendState.text}
+              </p>
+            )}
+          </motion.div>
         )}
       </AnimatePresence>
 
