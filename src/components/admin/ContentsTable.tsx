@@ -125,6 +125,11 @@ export function ContentsTable({
                   <span>{COMPLEXITY_LABEL[c.complexity]}</span>
                   <span>·</span>
                   <span className="uppercase">{c.type}</span>
+                  {c.source === 'youtube' && (
+                    <span className="rounded bg-[var(--bg-card)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-secondary)]">
+                      YouTube
+                    </span>
+                  )}
                   <span>·</span>
                   <span>orden {c.sort_order}</span>
                 </div>

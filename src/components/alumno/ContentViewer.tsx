@@ -1,21 +1,67 @@
 'use client'
 
 import { useState } from 'react'
-import type { ContentType } from '@/types/database'
+import type { ContentSource, ContentType } from '@/types/database'
 
-export function DriveViewer({
-  driveFileId,
+export function ContentViewer({
+  externalId,
   title,
   type,
+  source,
 }: {
-  driveFileId: string
+  externalId: string
   title: string
   type: ContentType
+  source: ContentSource
 }) {
   const [loaded, setLoaded] = useState(false)
-  const previewSrc = `https://drive.google.com/file/d/${driveFileId}/preview`
-  const viewUrl = `https://drive.google.com/file/d/${driveFileId}/view`
-  const downloadUrl = `https://drive.google.com/uc?export=download&id=${driveFileId}`
+
+  if (source === 'youtube') {
+    const embedSrc = `https://www.youtube-nocookie.com/embed/${externalId}?rel=0`
+    const watchUrl = `https://www.youtube.com/watch?v=${externalId}`
+
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]">
+          {!loaded && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--accent)]" />
+                <p className="text-xs text-[var(--text-muted)]">Cargando video…</p>
+              </div>
+            </div>
+          )}
+          <iframe
+            src={embedSrc}
+            title={title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            onLoad={() => setLoaded(true)}
+            className={[
+              'h-full w-full transition-opacity duration-300',
+              loaded ? 'opacity-100' : 'opacity-0',
+            ].join(' ')}
+          />
+        </div>
+        <p className="text-xs text-[var(--text-muted)]">
+          Si el video no carga,{' '}
+          <a
+            href={watchUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[var(--accent)] hover:underline"
+          >
+            abrilo directamente en YouTube
+          </a>
+          .
+        </p>
+      </div>
+    )
+  }
+
+  const previewSrc = `https://drive.google.com/file/d/${externalId}/preview`
+  const viewUrl = `https://drive.google.com/file/d/${externalId}/view`
+  const downloadUrl = `https://drive.google.com/uc?export=download&id=${externalId}`
 
   // Archivos descargables: no iframe, solo botones
   if (type === 'otro') {

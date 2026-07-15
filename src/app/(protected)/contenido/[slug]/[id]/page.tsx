@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { DriveViewer } from '@/components/alumno/DriveViewer'
+import { ContentViewer } from '@/components/alumno/ContentViewer'
 import { ViewedTracker } from '@/components/alumno/ViewedTracker'
 import { getMandatoryGate } from '@/lib/onboarding'
 import type { ComplexityLevel } from '@/types/database'
@@ -123,6 +123,11 @@ export default async function ContenidoViewerPage({
           <span className="rounded bg-[var(--bg-card)] px-1.5 py-0.5 text-[10px] text-[var(--text-muted)]">
             {LEVEL_LABEL[content.complexity]}
           </span>
+          {content.source === 'youtube' && (
+            <span className="rounded bg-[var(--bg-card)] px-1.5 py-0.5 text-[10px] text-[var(--text-muted)]">
+              vía YouTube
+            </span>
+          )}
         </div>
 
         <h1 className="text-xl font-bold text-[var(--text-primary)]">{content.title}</h1>
@@ -135,10 +140,11 @@ export default async function ContenidoViewerPage({
       </div>
 
       {/* Visor */}
-      <DriveViewer
-        driveFileId={content.drive_file_id}
+      <ContentViewer
+        externalId={content.external_id}
         title={content.title}
         type={content.type}
+        source={content.source}
       />
 
       {/* Marca como visto tras permanencia mínima; muestra la felicitación

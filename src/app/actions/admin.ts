@@ -8,7 +8,8 @@ import { sendApprovalEmail, sendRejectionEmail } from '@/lib/email'
 import { getEligibleUserIds, notifyNewContent } from '@/lib/notifications'
 import { testOdooConnection, checkEmailInOdoo, type OdooConnectionTest, type OdooEmailCheck } from '@/lib/odoo'
 import { slugify } from '@/lib/utils'
-import type { ComplexityLevel, ContentType, UserRole, UserStatus } from '@/types/database'
+import { extractYouTubeId } from '@/lib/youtube'
+import type { ComplexityLevel, ContentSource, ContentType, UserRole, UserStatus } from '@/types/database'
 
 type ActionState = { error?: string } | undefined
 
@@ -286,6 +287,22 @@ export async function deleteProduct(formData: FormData) {
 
 // ── Contenidos ────────────────────────────────────────────────────────────────
 
+/** Valida el ID/link pegado según la fuente; para YouTube resuelve el ID real y fuerza el tipo a 'video' */
+function resolveContentSource(
+  source: ContentSource,
+  rawId: string,
+  type: ContentType
+): { external_id: string; type: ContentType } | { error: string } {
+  if (source === 'youtube') {
+    const youtubeId = extractYouTubeId(rawId)
+    if (!youtubeId) {
+      return { error: 'No pudimos reconocer ese link de YouTube. Pegá la URL completa o el ID de 11 caracteres.' }
+    }
+    return { external_id: youtubeId, type: 'video' }
+  }
+  return { external_id: rawId, type }
+}
+
 export async function createContent(
   _prevState: ActionState,
   formData: FormData
@@ -296,16 +313,24 @@ export async function createContent(
   const title = (formData.get('title') as string)?.trim()
   const description = (formData.get('description') as string)?.trim() || null
   const complexity = formData.get('complexity') as ComplexityLevel
+  const source = ((formData.get('source') as string) || 'drive') as ContentSource
   const type = formData.get('type') as ContentType
-  const drive_file_id = (formData.get('drive_file_id') as string)?.trim()
+  const rawId = (formData.get('external_id') as string)?.trim()
+
   const sort_order = Number(formData.get('sort_order') ?? 0)
 
   if (!product_id) return { error: 'Seleccioná un producto.' }
   if (!title) return { error: 'El título es requerido.' }
-  if (!drive_file_id) return { error: 'El ID de Google Drive es requerido.' }
+  if (!rawId) {
+    return { error: source === 'youtube' ? 'El link o ID de YouTube es requerido.' : 'El ID de Google Drive es requerido.' }
+  }
+
+  const resolved = resolveContentSource(source, rawId, type)
+  if ('error' in resolved) return { error: resolved.error }
 
   const { error } = await supabase.from('contents').insert({
-    product_id, title, description, complexity, type, drive_file_id, sort_order,
+    product_id, title, description, complexity, source,
+    type: resolved.type, external_id: resolved.external_id, sort_order,
     created_by: userId,
   })
   if (error) return { error: error.message }
@@ -327,16 +352,26 @@ export async function updateContent(
   const title = (formData.get('title') as string)?.trim()
   const description = (formData.get('description') as string)?.trim() || null
   const complexity = formData.get('complexity') as ComplexityLevel
+  const source = ((formData.get('source') as string) || 'drive') as ContentSource
   const type = formData.get('type') as ContentType
-  const drive_file_id = (formData.get('drive_file_id') as string)?.trim()
+  const rawId = (formData.get('external_id') as string)?.trim()
+
   const sort_order = Number(formData.get('sort_order') ?? 0)
 
   if (!title) return { error: 'El título es requerido.' }
-  if (!drive_file_id) return { error: 'El ID de Google Drive es requerido.' }
+  if (!rawId) {
+    return { error: source === 'youtube' ? 'El link o ID de YouTube es requerido.' : 'El ID de Google Drive es requerido.' }
+  }
+
+  const resolved = resolveContentSource(source, rawId, type)
+  if ('error' in resolved) return { error: resolved.error }
 
   const { error } = await supabase
     .from('contents')
-    .update({ product_id, title, description, complexity, type, drive_file_id, sort_order })
+    .update({
+      product_id, title, description, complexity, source,
+      type: resolved.type, external_id: resolved.external_id, sort_order,
+    })
     .eq('id', id)
   if (error) return { error: error.message }
 
@@ -692,10 +727,10 @@ export async function findExistingDriveIds(driveIds: string[]): Promise<string[]
 
   const { data } = await supabase
     .from('contents')
-    .select('drive_file_id')
-    .in('drive_file_id', driveIds)
+    .select('external_id')
+    .in('external_id', driveIds)
 
-  return (data ?? []).map((r) => r.drive_file_id)
+  return (data ?? []).map((r) => r.external_id)
 }
 
 export async function bulkCreateContents(
@@ -715,9 +750,9 @@ export async function bulkCreateContents(
   // Re-chequear duplicados contra la base (la vista previa puede estar desactualizada)
   const { data: existing } = await supabase
     .from('contents')
-    .select('drive_file_id')
-    .in('drive_file_id', rows.map((r) => r.drive_file_id))
-  const existingIds = new Set((existing ?? []).map((r) => r.drive_file_id))
+    .select('external_id')
+    .in('external_id', rows.map((r) => r.drive_file_id))
+  const existingIds = new Set((existing ?? []).map((r) => r.external_id))
 
   for (const row of rows) {
     const title = row.title?.trim()
@@ -754,7 +789,8 @@ export async function bulkCreateContents(
       description: row.description,
       complexity: row.complexity,
       type: row.type,
-      drive_file_id: row.drive_file_id,
+      source: 'drive' as const,
+      external_id: row.drive_file_id,
       sort_order: baseOrder + i,
       created_by: userId,
     }))

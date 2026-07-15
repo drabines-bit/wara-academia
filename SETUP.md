@@ -300,3 +300,18 @@ de Supabase (idempotente). Agrega:
 
 Recomendación: los cursos obligatorios deben quedar **sin categoría** para que
 sean visibles para todos los alumnos.
+
+## 11. Contenido de YouTube embebido
+
+Ejecutar [`supabase/contenido-youtube.sql`](supabase/contenido-youtube.sql) en
+el SQL Editor de Supabase (idempotente). Agrega:
+
+- Renombra `contents.drive_file_id` a `contents.external_id` (ahora puede
+  guardar un ID de archivo de Drive o un ID de video de YouTube).
+- `contents.source` (`'drive'` | `'youtube'`, default `'drive'`).
+
+Desde `/admin/contenidos/nuevo` (o al editar un contenido) el admin elige la
+fuente. Para YouTube alcanza con pegar el link completo del video (o su ID de
+11 caracteres); el tipo queda fijo en "Video". No hace falta correr este
+script antes de seguir usando Drive — el default mantiene el comportamiento
+actual.

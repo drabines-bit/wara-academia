@@ -2,6 +2,7 @@ export type UserRole = 'admin' | 'alumno'
 export type UserStatus = 'pending' | 'approved' | 'rejected'
 export type ComplexityLevel = 'basico' | 'intermedio' | 'avanzado'
 export type ContentType = 'video' | 'pdf' | 'audio' | 'otro'
+export type ContentSource = 'drive' | 'youtube'
 export type NotificationKind = 'nuevo_contenido' | 'admin'
 
 export interface Database {
@@ -111,9 +112,10 @@ export interface Database {
           product_id: string
           complexity: ComplexityLevel
           type: ContentType
+          source: ContentSource
           title: string
           description: string | null
-          drive_file_id: string
+          external_id: string
           sort_order: number
           created_by: string | null
           created_at: string
@@ -123,9 +125,10 @@ export interface Database {
           product_id: string
           complexity: ComplexityLevel
           type: ContentType
+          source?: ContentSource
           title: string
           description?: string | null
-          drive_file_id: string
+          external_id: string
           sort_order?: number
           created_by?: string | null
           created_at?: string
@@ -135,9 +138,10 @@ export interface Database {
           product_id?: string
           complexity?: ComplexityLevel
           type?: ContentType
+          source?: ContentSource
           title?: string
           description?: string | null
-          drive_file_id?: string
+          external_id?: string
           sort_order?: number
           created_by?: string | null
           created_at?: string
