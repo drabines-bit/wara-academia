@@ -8,7 +8,7 @@
 export function TimeGreeting() {
   const hour = new Date().getHours()
   const greeting =
-    hour >= 6 && hour < 13 ? 'Buen día' : hour < 20 ? 'Buenas tardes' : 'Buenas noches'
+    hour < 6 ? 'Buenas noches' : hour < 13 ? 'Buen día' : hour < 20 ? 'Buenas tardes' : 'Buenas noches'
 
   return <span suppressHydrationWarning>{greeting}</span>
 }
