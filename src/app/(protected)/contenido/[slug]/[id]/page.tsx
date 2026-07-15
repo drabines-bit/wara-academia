@@ -152,38 +152,65 @@ export default async function ContenidoViewerPage({
       <ViewedTracker contentId={content.id} productName={product.name} />
 
       {/* Navegación inferior */}
-      <div className="flex items-center justify-between border-t border-[var(--border)] pt-4">
+      <div className="grid grid-cols-1 gap-3 border-t border-[var(--border)] pt-5 sm:grid-cols-2">
         <Link
           href={`/contenido/${slug}?nivel=${content.complexity}`}
-          className="inline-flex items-center gap-1.5 text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
+          className="group flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--bg-surface)] px-4 py-3 transition-colors hover:border-[var(--accent)] hover:bg-[var(--bg-card)]"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          Volver a {product.name}
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--bg-card)] text-[var(--text-secondary)] transition-transform duration-200 group-hover:-translate-x-0.5">
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs text-[var(--text-muted)]">Volver a</p>
+            <p className="truncate text-sm font-medium text-[var(--text-primary)]">{product.name}</p>
+          </div>
         </Link>
 
         {nextContent ? (
           <Link
             href={`/contenido/${slug}/${nextContent.id}`}
-            className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors text-right"
+            className="group flex items-center justify-between gap-3 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-4 py-3 transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)]/15"
           >
-            <span className="line-clamp-1 max-w-[200px]">Siguiente: {nextContent.title}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            <div className="min-w-0">
+              <p className="text-xs text-[var(--accent)]">Siguiente</p>
+              <p className="truncate text-sm font-medium text-[var(--text-primary)]">{nextContent.title}</p>
+            </div>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--bg-card)] text-[var(--accent)] transition-transform duration-200 group-hover:translate-x-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </span>
           </Link>
         ) : nextLevel ? (
           <Link
             href={`/contenido/${slug}?nivel=${nextLevel}`}
-            className="inline-flex items-center gap-1.5 text-sm text-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
+            className="group flex items-center justify-between gap-3 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-4 py-3 transition-colors hover:border-[var(--accent)] hover:bg-[var(--accent)]/15"
           >
-            Ver nivel {LEVEL_LABEL[nextLevel]}
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            <div className="min-w-0">
+              <p className="text-xs text-[var(--accent)]">Siguiente nivel</p>
+              <p className="truncate text-sm font-medium text-[var(--text-primary)]">{LEVEL_LABEL[nextLevel]}</p>
+            </div>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--bg-card)] text-[var(--accent)] transition-transform duration-200 group-hover:translate-x-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </span>
           </Link>
-        ) : null}
+        ) : (
+          <div className="flex items-center gap-3 rounded-xl border border-[var(--success)]/30 bg-[var(--success)]/10 px-4 py-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--bg-card)] text-[var(--success)]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 6 9 17l-5-5" />
+              </svg>
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs text-[var(--success)]">Llegaste al final</p>
+              <p className="truncate text-sm font-medium text-[var(--text-primary)]">Completaste todo {product.name}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
