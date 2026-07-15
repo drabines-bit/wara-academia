@@ -83,7 +83,7 @@ export function LoginForm({
       </AnimatePresence>
 
       <Button type="submit" loading={isPending} className="w-full mt-1">
-        Ingresar
+        {isPending ? 'Ingresando…' : 'Ingresar'}
       </Button>
 
       <p className="text-center text-sm text-[var(--text-muted)]">

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { AuthCard } from '@/components/auth/AuthCard'
 import { LoginForm } from '@/components/auth/LoginForm'
+import { TimeGreeting } from '@/components/auth/TimeGreeting'
 
 export const metadata: Metadata = { title: 'Iniciar sesión' }
 
@@ -12,7 +13,7 @@ export default async function LoginPage({
   const params = await searchParams
 
   return (
-    <AuthCard title="Bienvenido" subtitle="Ingresá a tu cuenta para continuar.">
+    <AuthCard title={<TimeGreeting />} subtitle="Ingresá a tu cuenta para continuar.">
       <LoginForm
         rechazado={params.rechazado === 'true'}
         passwordActualizado={params.password_actualizado === 'true'}

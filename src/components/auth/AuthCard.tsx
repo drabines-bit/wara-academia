@@ -9,7 +9,7 @@ export function AuthCard({
   subtitle,
   children,
 }: {
-  title: string
+  title: React.ReactNode
   subtitle?: string
   children: React.ReactNode
 }) {
@@ -25,9 +25,17 @@ export function AuthCard({
           initial={{ opacity: 0, scale: 0.88 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, delay: 0.08, ease: expo }}
-          className="mb-4 flex items-center justify-center gap-2"
+          className="group mb-4 flex items-center justify-center gap-2"
         >
-          <img src="/logo.svg" alt="WARA GPS" className="h-8 w-auto" />
+          {/* Ping de señal GPS al pasar el mouse por el logo */}
+          <span className="relative inline-flex">
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-1/2 h-11 w-11 rounded-full border border-[var(--accent)]/50 opacity-0 group-hover:animate-[signal-ping_1.2s_cubic-bezier(0.16,1,0.3,1)_infinite]"
+              style={{ transform: 'translate(-50%, -50%)' }}
+            />
+            <img src="/logo.svg" alt="WARA GPS" className="h-8 w-auto" />
+          </span>
           <span className="text-sm font-semibold text-[var(--text-secondary)]">
             Academia WARA GPS
           </span>
