@@ -84,6 +84,15 @@ export async function signUp(
     return { error: error.message }
   }
 
+  // Si el email ya tiene una cuenta confirmada, Supabase no siempre devuelve un
+  // error: cuando "Confirm phone" también está habilitado en el proyecto,
+  // responde con un usuario ofuscado (sin identidades nuevas) y no envía nada.
+  // Sin este chequeo el usuario terminaba en "Revisá tu email" sin que se
+  // enviara ningún email de confirmación.
+  if (data.user && data.user.identities?.length === 0) {
+    return { error: 'Ya existe una cuenta con ese email. Iniciá sesión o recuperá tu contraseña.' }
+  }
+
   // Aprobación automática si el email figura en los contactos de Odoo.
   // Si Odoo no está configurado, no responde o falla → circuito manual.
   let autoApproved = false

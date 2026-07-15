@@ -136,6 +136,28 @@ En **Authentication → URL Configuration**:
 Para desarrollo local agregar también:
 - `http://localhost:3000/auth/callback`
 
+### 3.1 Email de confirmación de registro (recomendado en producción)
+
+El email de "confirmá tu cuenta" que ve el usuario al registrarse lo envía
+**Supabase Auth directamente** (no pasa por Resend). Por defecto Supabase usa
+su propio mailer, que tiene un límite muy bajo (unos pocos emails por hora) y
+no está pensado para producción — con varios registros el mismo día puede
+empezar a no entregar el email sin ningún aviso ni error visible en la app.
+
+Como ya tenemos Resend configurado para el resto de los emails, conviene
+conectarlo también como SMTP de Supabase Auth:
+
+**Authentication → Emails → SMTP Settings** → activar "Enable Custom SMTP":
+- Host: `smtp.resend.com`
+- Port: `465`
+- Username: `resend`
+- Password: el mismo valor de `RESEND_API_KEY`
+- Sender email / Sender name: los mismos de `RESEND_FROM_EMAIL`
+
+Esto saca el límite de envío de Supabase y deja el email de confirmación
+pasando por el mismo proveedor (y dominio verificado) que ya usa el resto de
+la plataforma.
+
 ## 4. Sembrar admins
 
 No hay UI para crear admins. Hacerlo directamente en Supabase:
