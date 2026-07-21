@@ -388,8 +388,19 @@ historial completo de `/novedades`, filtrable por categoría.
 Si una novedad se publica de inmediato, el aviso en la campanita sale al
 toque. Si se programó para más tarde, hace falta un disparador externo que
 la detecte cuando llegue la hora — para eso se agregó
-[`vercel.json`](vercel.json) con un cron job que pega cada 15 minutos a
+[`vercel.json`](vercel.json) con un cron job que pega una vez por día a
 `/api/cron/novedades`.
+
+**El proyecto está en el plan Hobby de Vercel, que solo permite cron jobs de
+una vez por día** — un schedule más frecuente (se probó `*/15 * * * *`) hace
+que Vercel **rechace el deploy completo** (no solo el cron: el sitio entero
+no se actualiza), por eso el schedule quedó fijo en `"0 13 * * *"` (13:00 UTC
+= 10:00 hora Argentina). Si en algún momento se pasa a plan Pro, se puede
+volver a una cadencia más seguida. El feed en sí (`/novedades`, la sección
+del home) siempre respeta la fecha de publicación exacta sin depender del
+cron; lo único atado a esta cadencia diaria es cuánto tarda en aparecer el
+aviso en la campanita de una novedad *programada* (hasta ~24 h) — una
+novedad publicada de inmediato se notifica al toque, sin esperar al cron.
 
 1. En Vercel → el proyecto → **Settings → Environment Variables**, agregar
    `CRON_SECRET` con un valor random (ej. generado con
@@ -397,13 +408,6 @@ la detecte cuando llegue la hora — para eso se agregó
 2. Redeployar. Vercel arma automáticamente el header
    `Authorization: Bearer <CRON_SECRET>` en cada invocación programada; la
    ruta rechaza cualquier otro pedido.
-3. **Importante si el proyecto está en el plan Hobby de Vercel:** los cron
-   jobs de Hobby corren como máximo una vez por día (a una hora fija que
-   elige Vercel), no cada 15 minutos — el `vercel.json` va a desplegar igual,
-   pero el aviso de una novedad programada puede tardar hasta 24 h en llegar
-   a la campanita. El feed en sí (`/novedades`, la sección del home) siempre
-   respeta la fecha de publicación exacta sin depender del cron; lo único
-   afectado por la cadencia es la notificación activa.
 
 Sin `CRON_SECRET` configurado la ruta funciona igual pero queda pública (sin
 verificar el header) — se recomienda siempre configurarlo en producción.
