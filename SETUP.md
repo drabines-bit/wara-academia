@@ -402,12 +402,13 @@ cron; lo único atado a esta cadencia diaria es cuánto tarda en aparecer el
 aviso en la campanita de una novedad *programada* (hasta ~24 h) — una
 novedad publicada de inmediato se notifica al toque, sin esperar al cron.
 
-1. En Vercel → el proyecto → **Settings → Environment Variables**, agregar
-   `CRON_SECRET` con un valor random (ej. generado con
-   `openssl rand -hex 32`), en **Production**.
-2. Redeployar. Vercel arma automáticamente el header
-   `Authorization: Bearer <CRON_SECRET>` en cada invocación programada; la
-   ruta rechaza cualquier otro pedido.
+Vercel suele crear la variable `CRON_SECRET` solo al detectar un cron job en
+`vercel.json` (y arma automáticamente el header
+`Authorization: Bearer <CRON_SECRET>` en cada invocación programada; la ruta
+rechaza cualquier otro pedido). Verificar en Vercel → el proyecto →
+**Settings → Environment Variables** que exista en **Production**; si no
+está, agregarla a mano con un valor random (ej. `openssl rand -hex 32`) y
+redeployar.
 
 Sin `CRON_SECRET` configurado la ruta funciona igual pero queda pública (sin
 verificar el header) — se recomienda siempre configurarlo en producción.
