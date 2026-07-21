@@ -23,6 +23,7 @@ const TYPES = [
 const SOURCES: { value: ContentSource; label: string }[] = [
   { value: 'drive', label: 'Google Drive' },
   { value: 'youtube', label: 'YouTube' },
+  { value: 'web', label: 'Sitio web' },
 ]
 
 const SELECT_CLASS =
@@ -129,11 +130,16 @@ export function ContentForm({
           <label className="text-sm font-medium text-[var(--text-secondary)]">
             Tipo
           </label>
-          {source === 'youtube' ? (
+          {source === 'youtube' || source === 'web' ? (
             <>
-              <input type="hidden" name="type" value="video" />
-              <select disabled value="video" className={`${SELECT_CLASS} cursor-not-allowed opacity-60`}>
+              <input type="hidden" name="type" value={source === 'youtube' ? 'video' : 'web'} />
+              <select
+                disabled
+                value={source === 'youtube' ? 'video' : 'web'}
+                className={`${SELECT_CLASS} cursor-not-allowed opacity-60`}
+              >
                 <option value="video">Video</option>
+                <option value="web">Sitio web</option>
               </select>
             </>
           ) : (
@@ -170,13 +176,29 @@ export function ContentForm({
               <span className="font-mono">youtube.com/shorts/</span>.
             </p>
           </>
+        ) : source === 'web' ? (
+          <>
+            <Input
+              label="URL del sitio"
+              name="external_id"
+              type="url"
+              required
+              defaultValue={content?.source === 'web' ? content.external_id : ''}
+              placeholder="https://wara-docs.vercel.app/docs/auth"
+            />
+            <p className="text-xs text-[var(--text-muted)]">
+              Se embebe tal cual dentro de la página del contenido. El sitio tiene que
+              permitir ser mostrado en un iframe (sin encabezados <span className="font-mono">X-Frame-Options</span> /{' '}
+              <span className="font-mono">CSP frame-ancestors</span> que lo bloqueen).
+            </p>
+          </>
         ) : (
           <>
             <Input
               label="ID de Google Drive"
               name="external_id"
               required
-              defaultValue={content?.source !== 'youtube' ? content?.external_id : ''}
+              defaultValue={content && content.source !== 'youtube' && content.source !== 'web' ? content.external_id : ''}
               placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms"
             />
             <p className="text-xs text-[var(--text-muted)]">

@@ -59,6 +59,60 @@ export function ContentViewer({
     )
   }
 
+  if (source === 'web') {
+    let hostname = externalId
+    try {
+      hostname = new URL(externalId).hostname
+    } catch {
+      // externalId sin formato de URL válido; mostramos el valor tal cual
+    }
+
+    return (
+      <div className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg-card)]">
+        <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--bg-surface)] px-4 py-2">
+          <div className="flex min-w-0 items-center gap-2 text-xs text-[var(--text-muted)]">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+            <span className="truncate">{hostname}</span>
+          </div>
+          <a
+            href={externalId}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-1 text-xs text-[var(--accent)] hover:underline"
+          >
+            Abrir en pestaña nueva
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <path d="M15 3h6v6M10 14 21 3" />
+            </svg>
+          </a>
+        </div>
+        <div className="relative h-[75vh] min-h-[520px] w-full">
+          {!loaded && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--border)] border-t-[var(--accent)]" />
+                <p className="text-xs text-[var(--text-muted)]">Cargando sitio…</p>
+              </div>
+            </div>
+          )}
+          <iframe
+            src={externalId}
+            title={title}
+            onLoad={() => setLoaded(true)}
+            className={[
+              'h-full w-full transition-opacity duration-300',
+              loaded ? 'opacity-100' : 'opacity-0',
+            ].join(' ')}
+          />
+        </div>
+      </div>
+    )
+  }
+
   const previewSrc = `https://drive.google.com/file/d/${externalId}/preview`
   const viewUrl = `https://drive.google.com/file/d/${externalId}/view`
   const downloadUrl = `https://drive.google.com/uc?export=download&id=${externalId}`

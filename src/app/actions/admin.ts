@@ -287,7 +287,14 @@ export async function deleteProduct(formData: FormData) {
 
 // ── Contenidos ────────────────────────────────────────────────────────────────
 
-/** Valida el ID/link pegado según la fuente; para YouTube resuelve el ID real y fuerza el tipo a 'video' */
+/** Mensaje de "campo requerido" según la fuente, para el chequeo temprano de rawId vacío */
+function requiredIdErrorMessage(source: ContentSource): string {
+  if (source === 'youtube') return 'El link o ID de YouTube es requerido.'
+  if (source === 'web') return 'La URL del sitio es requerida.'
+  return 'El ID de Google Drive es requerido.'
+}
+
+/** Valida el ID/link/URL pegado según la fuente; para YouTube y sitios web fuerza el tipo correspondiente */
 function resolveContentSource(
   source: ContentSource,
   rawId: string,
@@ -299,6 +306,12 @@ function resolveContentSource(
       return { error: 'No pudimos reconocer ese link de YouTube. Pegá la URL completa o el ID de 11 caracteres.' }
     }
     return { external_id: youtubeId, type: 'video' }
+  }
+  if (source === 'web') {
+    if (!/^https?:\/\/.+/i.test(rawId)) {
+      return { error: 'Ingresá una URL completa, empezando con https://' }
+    }
+    return { external_id: rawId, type: 'web' }
   }
   return { external_id: rawId, type }
 }
@@ -322,7 +335,7 @@ export async function createContent(
   if (!product_id) return { error: 'Seleccioná un producto.' }
   if (!title) return { error: 'El título es requerido.' }
   if (!rawId) {
-    return { error: source === 'youtube' ? 'El link o ID de YouTube es requerido.' : 'El ID de Google Drive es requerido.' }
+    return { error: requiredIdErrorMessage(source) }
   }
 
   const resolved = resolveContentSource(source, rawId, type)
@@ -360,7 +373,7 @@ export async function updateContent(
 
   if (!title) return { error: 'El título es requerido.' }
   if (!rawId) {
-    return { error: source === 'youtube' ? 'El link o ID de YouTube es requerido.' : 'El ID de Google Drive es requerido.' }
+    return { error: requiredIdErrorMessage(source) }
   }
 
   const resolved = resolveContentSource(source, rawId, type)

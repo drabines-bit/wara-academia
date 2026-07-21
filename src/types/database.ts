@@ -1,8 +1,8 @@
 export type UserRole = 'admin' | 'alumno'
 export type UserStatus = 'pending' | 'approved' | 'rejected'
 export type ComplexityLevel = 'basico' | 'intermedio' | 'avanzado'
-export type ContentType = 'video' | 'pdf' | 'audio' | 'otro'
-export type ContentSource = 'drive' | 'youtube'
+export type ContentType = 'video' | 'pdf' | 'audio' | 'otro' | 'web'
+export type ContentSource = 'drive' | 'youtube' | 'web'
 export type NotificationKind = 'nuevo_contenido' | 'admin'
 
 export interface Database {

@@ -337,3 +337,26 @@ fuente. Para YouTube alcanza con pegar el link completo del video (o su ID de
 11 caracteres); el tipo queda fijo en "Video". No hace falta correr este
 script antes de seguir usando Drive — el default mantiene el comportamiento
 actual.
+
+## 12. Contenido de sitio web embebido
+
+Ejecutar [`supabase/contenido-web.sql`](supabase/contenido-web.sql) en el SQL
+Editor de Supabase (idempotente, requiere haber corrido antes el script del
+punto 11). Agrega:
+
+- `contents.source` ahora acepta también `'web'`.
+- De paso pasa `contents.type` de enum a texto + check (mismo patrón que
+  `source`), agregando el valor `'web'` — el enum original nunca quedó
+  documentado con sus valores reales (`'audio'`/`'otro'` se habían agregado a
+  mano en algún momento sin dejar rastro en ningún script).
+
+Desde `/admin/contenidos/nuevo`, fuente "Sitio web": el admin pega la URL
+completa (por ejemplo `https://wara-docs.vercel.app/docs/auth`) y se embebe
+tal cual dentro de la página del contenido, en un panel de altura completa
+con un botón para abrirlo en una pestaña nueva.
+
+**Importante:** esto solo funciona si el sitio de destino permite ser
+embebido en un iframe — si en algún momento agrega encabezados
+`X-Frame-Options` o `Content-Security-Policy: frame-ancestors` que lo
+bloqueen, el contenido va a dejar de cargar (no hay forma de evitar esto
+desde el lado de la Academia, hay que ajustarlo en el sitio de destino).

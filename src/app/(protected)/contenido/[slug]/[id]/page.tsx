@@ -20,6 +20,7 @@ const TYPE_LABEL: Record<string, string> = {
   pdf: 'PDF',
   audio: 'Audio',
   otro: 'Descargable',
+  web: 'Sitio web',
 }
 
 const TYPE_COLOR: Record<string, string> = {
@@ -27,6 +28,7 @@ const TYPE_COLOR: Record<string, string> = {
   pdf: 'bg-[var(--warning)]/15 text-[var(--warning)]',
   audio: 'bg-[var(--success)]/15 text-[var(--success)]',
   otro: 'bg-[var(--border)] text-[var(--text-secondary)]',
+  web: 'bg-[var(--border)] text-[var(--text-secondary)]',
 }
 
 const NEXT_LEVEL: Record<string, ComplexityLevel | null> = {

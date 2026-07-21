@@ -13,6 +13,11 @@ const COMPLEXITY_LABEL: Record<ComplexityLevel, string> = {
   avanzado: 'Avanzado',
 }
 
+const SOURCE_LABEL: Partial<Record<Content['source'], string>> = {
+  youtube: 'YouTube',
+  web: 'Sitio web',
+}
+
 export type ContentRow = Content & { productName: string }
 
 export function ContentsTable({
@@ -125,9 +130,9 @@ export function ContentsTable({
                   <span>{COMPLEXITY_LABEL[c.complexity]}</span>
                   <span>·</span>
                   <span className="uppercase">{c.type}</span>
-                  {c.source === 'youtube' && (
+                  {SOURCE_LABEL[c.source] && (
                     <span className="rounded bg-[var(--bg-card)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-secondary)]">
-                      YouTube
+                      {SOURCE_LABEL[c.source]}
                     </span>
                   )}
                   <span>·</span>
