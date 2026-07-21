@@ -2,13 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { approveUser, rejectUser, changeUserRole, deleteUser } from '@/app/actions/admin'
+import { approveUser, rejectUser, changeUserRole, changeUserAudience, deleteUser } from '@/app/actions/admin'
 import { useOptimisticRows } from '@/hooks/useOptimisticRows'
 import { showToast } from '@/lib/toast'
 import { matchesQuery } from '@/lib/text'
 import { UserActions } from '@/components/admin/UserActions'
 import { UserCategorySelect } from '@/components/admin/UserCategorySelect'
-import type { Category, UserRole, UserStatus } from '@/types/database'
+import type { Category, UserAudience, UserRole, UserStatus } from '@/types/database'
 
 export type UserRow = {
   id: string
@@ -16,6 +16,7 @@ export type UserRow = {
   email: string
   role: UserRole
   status: UserStatus
+  audience: UserAudience
   created_at: string
   categoryIds: string[]
 }
@@ -126,6 +127,23 @@ export function UsersTable({
     })
   }
 
+  function handleToggleAudience(row: UserRow) {
+    const nextAudience: UserAudience = row.audience === 'empleado' ? 'cliente' : 'empleado'
+    withPending(row.id, async () => {
+      const ok = await optimisticAction(row, { audience: nextAudience }, async () => {
+        const fd = new FormData()
+        fd.append('id', row.id)
+        fd.append('audience', nextAudience)
+        await changeUserAudience(fd)
+        showToast({
+          text: `${row.full_name || 'Usuario'} marcado como ${nextAudience}.`,
+          tone: 'success',
+        })
+      })
+      if (!ok) showToast({ text: 'No se pudo cambiar la audiencia.', tone: 'error' })
+    })
+  }
+
   function handleDelete(row: UserRow) {
     optimisticDelete(row, {
       label: `Eliminado: ${row.full_name || row.email || 'usuario'}.`,
@@ -213,6 +231,11 @@ export function UsersTable({
                         Admin
                       </span>
                     )}
+                    {r.audience === 'empleado' && (
+                      <span className="rounded-full bg-[var(--bg-card)] px-2 py-0.5 text-xs font-medium text-[var(--text-secondary)]">
+                        Empleado
+                      </span>
+                    )}
                     <span className="text-xs text-[var(--text-muted)]">
                       {new Date(r.created_at).toLocaleDateString('es-AR')}
                     </span>
@@ -222,10 +245,12 @@ export function UsersTable({
                 <UserActions
                   status={r.status}
                   role={r.role}
+                  audience={r.audience}
                   pending={pendingIds.has(r.id)}
                   onApprove={() => handleApprove(r)}
                   onReject={() => handleReject(r)}
                   onToggleRole={() => handleToggleRole(r)}
+                  onToggleAudience={() => handleToggleAudience(r)}
                   onDelete={() => handleDelete(r)}
                 />
               </div>

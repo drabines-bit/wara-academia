@@ -18,7 +18,7 @@ export default async function UsuariosPage({
   const [{ data: profiles }, { data: allCategories }] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id, full_name, role, status, created_at')
+      .select('id, full_name, role, status, audience, created_at')
       .order('created_at', { ascending: false }),
     supabase.from('categories').select('*').order('sort_order').order('name'),
   ])
@@ -47,6 +47,7 @@ export default async function UsuariosPage({
     email: emailById[p.id] ?? '',
     role: p.role,
     status: p.status,
+    audience: p.audience,
     created_at: p.created_at,
     categoryIds: categoriesByUser[p.id] ?? [],
   }))

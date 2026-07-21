@@ -5,19 +5,21 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { notifyAdminsNewUser, notifyAdminsAutoApproved } from '@/lib/email'
 import { isEmailInOdoo } from '@/lib/odoo'
+import { deriveAudience } from '@/lib/audience'
 
 /**
  * Aprueba el perfil recién creado y le asigna las categorías por defecto.
  * El perfil lo crea un trigger de la base al registrarse; si todavía no
  * existe se reintenta una vez antes de dejar el circuito manual.
  */
-async function autoApproveProfile(userId: string): Promise<boolean> {
+async function autoApproveProfile(userId: string, email: string): Promise<boolean> {
   const service = createServiceClient()
+  const audience = await deriveAudience(email)
 
   for (let attempt = 0; attempt < 2; attempt++) {
     const { data } = await service
       .from('profiles')
-      .update({ status: 'approved' })
+      .update({ status: 'approved', audience })
       .eq('id', userId)
       .select('id')
 
@@ -98,7 +100,7 @@ export async function signUp(
   let autoApproved = false
   const userId = data.user?.id
   if (userId && (await isEmailInOdoo(email)) === true) {
-    autoApproved = await autoApproveProfile(userId)
+    autoApproved = await autoApproveProfile(userId, email)
   }
 
   // Avisar a los admins (no bloquea si falla)

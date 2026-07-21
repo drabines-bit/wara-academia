@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { ProductGrid } from '@/components/alumno/ProductGrid'
 import { ContentSearch, type SearchItem } from '@/components/alumno/ContentSearch'
+import { NewsPreview } from '@/components/alumno/NewsPreview'
 import { getWelcomeSettings } from '@/lib/onboarding'
 
 const LEVEL_ORDER: Record<string, number> = { basico: 0, intermedio: 1, avanzado: 2 }
@@ -34,6 +35,13 @@ export default async function ContenidoPage() {
     .single()
 
   const firstName = profile?.full_name?.trim().split(/\s+/)[0] ?? ''
+
+  // Últimas novedades visibles para este usuario (RLS filtra por audiencia)
+  const { data: latestNews } = await supabase
+    .from('news')
+    .select('*')
+    .order('publish_at', { ascending: false })
+    .limit(3)
 
   // Categorías del usuario (o por defecto)
   const { data: userCats } = await supabase
@@ -257,6 +265,8 @@ export default async function ContenidoPage() {
             : 'Seleccioná un curso para ver el material disponible.'}
         </p>
       </div>
+
+      <NewsPreview items={latestNews ?? []} />
 
       {searchItems.length > 0 && <ContentSearch items={searchItems} />}
 

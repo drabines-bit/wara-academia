@@ -360,3 +360,50 @@ embebido en un iframe — si en algún momento agrega encabezados
 `X-Frame-Options` o `Content-Security-Policy: frame-ancestors` que lo
 bloqueen, el contenido va a dejar de cargar (no hay forma de evitar esto
 desde el lado de la Academia, hay que ajustarlo en el sitio de destino).
+
+## 13. Feed de novedades
+
+Ejecutar [`supabase/novedades.sql`](supabase/novedades.sql) en el SQL Editor
+de Supabase (idempotente). Agrega:
+
+- `profiles.audience` (`'cliente'` | `'empleado'`, default `'cliente'`): se
+  calcula automáticamente al aprobar un usuario (dominio `@waragps.com` →
+  etiqueta `warapeople` en Odoo → default `'cliente'`); el admin puede
+  sobrescribirla a mano desde `/admin/usuarios` (botón "Marcar como
+  empleado"/"Marcar como cliente").
+- `news`: título, cuerpo, categoría (`feature` / `producto` / `empleados` /
+  `general`), audiencia (`todos` / `cliente` / `empleado`), curso relacionado
+  opcional y fecha de publicación (puede programarse a futuro). La visibilidad
+  por audiencia la aplica una policy de RLS, no la UI — un usuario nunca puede
+  leer por API una novedad fuera de su audiencia.
+- `notifications.kind` ahora acepta también `'novedad'`, para que la
+  publicación de una novedad pueda avisar en la campanita existente.
+
+Desde `/admin/novedades` el admin crea, edita y elimina novedades. Los
+alumnos las ven en una sección destacada en el home (`/contenido`) y en el
+historial completo de `/novedades`, filtrable por categoría.
+
+### Notificación de publicaciones programadas (Vercel Cron)
+
+Si una novedad se publica de inmediato, el aviso en la campanita sale al
+toque. Si se programó para más tarde, hace falta un disparador externo que
+la detecte cuando llegue la hora — para eso se agregó
+[`vercel.json`](vercel.json) con un cron job que pega cada 15 minutos a
+`/api/cron/novedades`.
+
+1. En Vercel → el proyecto → **Settings → Environment Variables**, agregar
+   `CRON_SECRET` con un valor random (ej. generado con
+   `openssl rand -hex 32`), en **Production**.
+2. Redeployar. Vercel arma automáticamente el header
+   `Authorization: Bearer <CRON_SECRET>` en cada invocación programada; la
+   ruta rechaza cualquier otro pedido.
+3. **Importante si el proyecto está en el plan Hobby de Vercel:** los cron
+   jobs de Hobby corren como máximo una vez por día (a una hora fija que
+   elige Vercel), no cada 15 minutos — el `vercel.json` va a desplegar igual,
+   pero el aviso de una novedad programada puede tardar hasta 24 h en llegar
+   a la campanita. El feed en sí (`/novedades`, la sección del home) siempre
+   respeta la fecha de publicación exacta sin depender del cron; lo único
+   afectado por la cadencia es la notificación activa.
+
+Sin `CRON_SECRET` configurado la ruta funciona igual pero queda pública (sin
+verificar el header) — se recomienda siempre configurarlo en producción.

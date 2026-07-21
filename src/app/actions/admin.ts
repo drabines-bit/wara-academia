@@ -7,9 +7,20 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { sendApprovalEmail, sendRejectionEmail } from '@/lib/email'
 import { getEligibleUserIds, notifyNewContent } from '@/lib/notifications'
 import { testOdooConnection, checkEmailInOdoo, type OdooConnectionTest, type OdooEmailCheck } from '@/lib/odoo'
+import { deriveAudience } from '@/lib/audience'
+import { notifyNews } from '@/lib/news'
 import { slugify } from '@/lib/utils'
 import { extractYouTubeId } from '@/lib/youtube'
-import type { ComplexityLevel, ContentSource, ContentType, UserRole, UserStatus } from '@/types/database'
+import type {
+  ComplexityLevel,
+  ContentSource,
+  ContentType,
+  NewsAudience,
+  NewsCategory,
+  UserAudience,
+  UserRole,
+  UserStatus,
+} from '@/types/database'
 
 type ActionState = { error?: string } | undefined
 
@@ -36,7 +47,17 @@ export async function approveUser(formData: FormData): Promise<UserActionResult>
   const { supabase } = await assertAdmin()
   const id = formData.get('id') as string
 
-  const { error } = await supabase.from('profiles').update({ status: 'approved' as UserStatus }).eq('id', id)
+  // Service client solo para auth.admin API
+  const service = createServiceClient()
+  const { data } = await service.auth.admin.getUserById(id)
+  const email = data.user?.email ?? null
+
+  const audience = email ? await deriveAudience(email) : undefined
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ status: 'approved' as UserStatus, ...(audience ? { audience } : {}) })
+    .eq('id', id)
   if (error) throw new Error(error.message)
 
   // Asignar categorías por defecto si el usuario no tiene ninguna
@@ -52,21 +73,16 @@ export async function approveUser(formData: FormData): Promise<UserActionResult>
       .eq('is_default', true)
 
     if (defaultCats?.length) {
-      const service = createServiceClient()
       await service.from('user_categories').insert(
         defaultCats.map((c) => ({ user_id: id, category_id: c.id }))
       )
     }
   }
 
-  // Service client solo para auth.admin API
-  const service = createServiceClient()
-  const { data } = await service.auth.admin.getUserById(id)
   const { data: profile } = await supabase
     .from('profiles').select('full_name').eq('id', id).single()
 
   let emailSent = false
-  const email = data.user?.email ?? null
   if (email && profile?.full_name) {
     emailSent = await sendApprovalEmail(email, profile.full_name).catch((e) => {
       console.error('sendApprovalEmail lanzó:', e)
@@ -111,6 +127,19 @@ export async function changeUserRole(formData: FormData) {
   if (role !== 'admin' && role !== 'alumno') throw new Error('Rol inválido')
 
   const { error } = await supabase.from('profiles').update({ role }).eq('id', id)
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/admin/usuarios')
+}
+
+export async function changeUserAudience(formData: FormData) {
+  const { supabase } = await assertAdmin()
+  const id = formData.get('id') as string
+  const audience = formData.get('audience') as UserAudience
+
+  if (audience !== 'cliente' && audience !== 'empleado') throw new Error('Audiencia inválida')
+
+  const { error } = await supabase.from('profiles').update({ audience }).eq('id', id)
   if (error) throw new Error(error.message)
 
   revalidatePath('/admin/usuarios')
@@ -577,6 +606,98 @@ export async function sendCourseNotification(
   if (error) return { error: error.message }
 
   return { sent: targets.length }
+}
+
+// ── Novedades ─────────────────────────────────────────────────────────────────
+
+const VALID_NEWS_CATEGORIES: NewsCategory[] = ['feature', 'producto', 'empleados', 'general']
+const VALID_NEWS_AUDIENCES: NewsAudience[] = ['todos', 'cliente', 'empleado']
+
+export type NewsActionState = { error?: string } | undefined
+
+/** El input <input type="datetime-local"> llega sin zona horaria; se interpreta
+ *  siempre como hora de Argentina (UTC-3, sin horario de verano) sin importar
+ *  en qué zona horaria corra el servidor. */
+function parsePublishAt(raw: string): string {
+  if (!raw) return new Date().toISOString()
+  const withSeconds = raw.length === 16 ? `${raw}:00` : raw
+  return new Date(`${withSeconds}-03:00`).toISOString()
+}
+
+export async function createNews(
+  _prevState: NewsActionState,
+  formData: FormData
+): Promise<NewsActionState> {
+  const { supabase, userId } = await assertAdmin()
+
+  const title = (formData.get('title') as string)?.trim()
+  const body = (formData.get('body') as string)?.trim()
+  const category = formData.get('category') as NewsCategory
+  const audience = formData.get('audience') as NewsAudience
+  const product_id = (formData.get('product_id') as string) || null
+  const publish_at = parsePublishAt(((formData.get('publish_at') as string) ?? '').trim())
+
+  if (!title) return { error: 'El título es requerido.' }
+  if (!body) return { error: 'El cuerpo es requerido.' }
+  if (!VALID_NEWS_CATEGORIES.includes(category)) return { error: 'Categoría inválida.' }
+  if (!VALID_NEWS_AUDIENCES.includes(audience)) return { error: 'Audiencia inválida.' }
+
+  const { data, error } = await supabase
+    .from('news')
+    .insert({ title, body, category, audience, product_id, publish_at, created_by: userId })
+    .select('id, publish_at')
+    .single()
+
+  if (error) return { error: error.message }
+
+  if (data && new Date(data.publish_at) <= new Date()) {
+    notifyNews(data.id).catch(console.error)
+  }
+
+  revalidatePath('/admin/novedades')
+  revalidatePath('/novedades')
+  revalidatePath('/contenido')
+  redirect('/admin/novedades')
+}
+
+export async function updateNews(
+  _prevState: NewsActionState,
+  formData: FormData
+): Promise<NewsActionState> {
+  const { supabase } = await assertAdmin()
+
+  const id = formData.get('id') as string
+  const title = (formData.get('title') as string)?.trim()
+  const body = (formData.get('body') as string)?.trim()
+  const category = formData.get('category') as NewsCategory
+  const audience = formData.get('audience') as NewsAudience
+  const product_id = (formData.get('product_id') as string) || null
+  const publish_at = parsePublishAt(((formData.get('publish_at') as string) ?? '').trim())
+
+  if (!title) return { error: 'El título es requerido.' }
+  if (!body) return { error: 'El cuerpo es requerido.' }
+  if (!VALID_NEWS_CATEGORIES.includes(category)) return { error: 'Categoría inválida.' }
+  if (!VALID_NEWS_AUDIENCES.includes(audience)) return { error: 'Audiencia inválida.' }
+
+  const { error } = await supabase
+    .from('news')
+    .update({ title, body, category, audience, product_id, publish_at })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/novedades')
+  revalidatePath('/novedades')
+  revalidatePath('/contenido')
+  redirect('/admin/novedades')
+}
+
+export async function deleteNews(formData: FormData) {
+  const { supabase } = await assertAdmin()
+  const id = formData.get('id') as string
+  await supabase.from('news').delete().eq('id', id)
+  revalidatePath('/admin/novedades')
+  revalidatePath('/novedades')
 }
 
 // ── Importador masivo de contenidos ───────────────────────────────────────────

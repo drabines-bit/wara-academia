@@ -112,6 +112,33 @@ export async function isEmailInOdoo(email: string): Promise<boolean | null> {
   }
 }
 
+/**
+ * Verifica si el contacto de Odoo asociado a ese email tiene la etiqueta
+ * "warapeople" (usada para marcar contactos internos/empleados).
+ *
+ * Devuelve:
+ *   true  → el contacto existe y tiene la etiqueta
+ *   false → el contacto no existe, o existe pero no tiene la etiqueta
+ *   null  → no se pudo verificar (Odoo sin configurar, caído o con error)
+ */
+export async function hasWarapeopleTag(email: string): Promise<boolean | null> {
+  const cfg = getConfig()
+  if (!cfg) return null
+
+  try {
+    const count = await executeKw(cfg, 'res.partner', 'search_count', [
+      [
+        ['email', '=ilike', email],
+        ['category_id.name', '=ilike', 'warapeople'],
+      ],
+    ])
+    return typeof count === 'number' ? count > 0 : null
+  } catch (err) {
+    console.error('hasWarapeopleTag: no se pudo consultar Odoo:', err)
+    return null
+  }
+}
+
 // ── Diagnóstico (usado por el panel de admin) ─────────────────────────────────
 // A diferencia de isEmailInOdoo, estas funciones no silencian errores: el
 // admin necesita ver el motivo exacto de un fallo, no solo "no se pudo".

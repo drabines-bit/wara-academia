@@ -1,9 +1,12 @@
 export type UserRole = 'admin' | 'alumno'
 export type UserStatus = 'pending' | 'approved' | 'rejected'
+export type UserAudience = 'cliente' | 'empleado'
 export type ComplexityLevel = 'basico' | 'intermedio' | 'avanzado'
 export type ContentType = 'video' | 'pdf' | 'audio' | 'otro' | 'web'
 export type ContentSource = 'drive' | 'youtube' | 'web'
-export type NotificationKind = 'nuevo_contenido' | 'admin'
+export type NotificationKind = 'nuevo_contenido' | 'admin' | 'novedad'
+export type NewsCategory = 'feature' | 'producto' | 'empleados' | 'general'
+export type NewsAudience = 'todos' | UserAudience
 
 export interface Database {
   public: {
@@ -14,6 +17,7 @@ export interface Database {
           full_name: string
           role: UserRole
           status: UserStatus
+          audience: UserAudience
           preferred_theme: number
           spotify_embed_url: string | null
           created_at: string
@@ -23,6 +27,7 @@ export interface Database {
           full_name?: string
           role?: UserRole
           status?: UserStatus
+          audience?: UserAudience
           preferred_theme?: number
           spotify_embed_url?: string | null
           created_at?: string
@@ -32,6 +37,7 @@ export interface Database {
           full_name?: string
           role?: UserRole
           status?: UserStatus
+          audience?: UserAudience
           preferred_theme?: number
           spotify_embed_url?: string | null
           created_at?: string
@@ -270,6 +276,60 @@ export interface Database {
           },
         ]
       }
+      news: {
+        Row: {
+          id: string
+          title: string
+          body: string
+          category: NewsCategory
+          audience: NewsAudience
+          product_id: string | null
+          publish_at: string
+          notified_at: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          body: string
+          category?: NewsCategory
+          audience?: NewsAudience
+          product_id?: string | null
+          publish_at?: string
+          notified_at?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          body?: string
+          category?: NewsCategory
+          audience?: NewsAudience
+          product_id?: string | null
+          publish_at?: string
+          notified_at?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'news_product_id_fkey'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'news_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'profiles'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       welcome_settings: {
         Row: {
           id: boolean
@@ -353,5 +413,6 @@ export type Category = Database['public']['Tables']['categories']['Row']
 export type Product = Database['public']['Tables']['products']['Row']
 export type Content = Database['public']['Tables']['contents']['Row']
 export type Notification = Database['public']['Tables']['notifications']['Row']
+export type News = Database['public']['Tables']['news']['Row']
 export type CertificateSettings = Database['public']['Tables']['certificate_settings']['Row']
 export type WelcomeSettings = Database['public']['Tables']['welcome_settings']['Row']

@@ -11,6 +11,7 @@ export function AlumnoNav() {
   const [isPending, startTransition] = useTransition()
 
   const isHome = pathname.startsWith('/contenido')
+  const isNovedades = pathname.startsWith('/novedades')
   const isPerfil = pathname.startsWith('/perfil')
 
   return (
@@ -29,6 +30,7 @@ export function AlumnoNav() {
           <nav className="hidden md:flex items-center gap-1">
             {[
               { href: '/contenido', label: 'Inicio', active: isHome },
+              { href: '/novedades', label: 'Novedades', active: isNovedades },
               { href: '/perfil', label: 'Mi perfil', active: isPerfil },
             ].map(({ href, label, active }) => (
               <Link
@@ -74,6 +76,20 @@ export function AlumnoNav() {
               <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
             Inicio
+          </Link>
+
+          <Link
+            href="/novedades"
+            className={[
+              'flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] transition-colors',
+              isNovedades ? 'text-[var(--accent)]' : 'text-[var(--text-muted)]',
+            ].join(' ')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            </svg>
+            Novedades
           </Link>
 
           <Link
